@@ -2,7 +2,7 @@ export default function LoginPage() {
   return (
     <div className="w-full max-w-2xl bg-base-100 flex flex-col p-8 rounded-2xl">
       <div className="w-full h-32 flex items-center justify-center">
-        <p className="text-4xl text-base-content">SF Social Club</p>
+        <p className="text-4xl text-base-content">Welcome to SF Social Club!</p>
       </div>
       <div className="w-full flex flex-col gap-6">
         <div className="w-full flex flex-col gap-2">
