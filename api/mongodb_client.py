@@ -17,7 +17,12 @@ def connector():
     try:
         client.admin.command('ping')
         print("Pinged your deployment. You successfully connected to MongoDB!")
-        return client
+        return client.db
     except Exception as e:
         print(e)
         return None
+    
+def test_collection():
+    database = connector()
+    print(database.list_collection_names())
+    print(database.users.find_one({"name":"Sean Brown"}))
