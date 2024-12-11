@@ -49,6 +49,12 @@ def events():
     event = DB.events.find({})
     return jsonify({"data":event}),200
 
+@app.route('/event/<eventID>',methods=['GET'])
+@jwt_required()
+def event(eventID):
+    event = DB.events.find({"id":eventID})
+    return jsonify({"data":event}),200
+
 @app.route('/token', methods=['POST'])
 def create_token():
     
