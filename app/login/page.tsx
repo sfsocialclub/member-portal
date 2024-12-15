@@ -4,35 +4,34 @@ import axios from "axios";
 import { useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { useLoginMutation } from "@/lib/services/login";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState<string>();
 
+  const [login] = useLoginMutation();
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    await axios
-      .post(
-        "http://127.0.0.1:5328/api/login",
-        {
-          email,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      )
-      .then(({ data }) => {
-        if (data.access_token) {
-          Cookies.set("access_token", data.access_token);
-          Cookies.set("role", data.role); // UNSAFE, temporary solution to demo role saved in state
-          router.push("/");
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+
+    if (!email) {
+      console.error("Blank email passed in");
+      return;
+    }
+
+    const { data, error } = await login(email);
+
+    if (error) {
+      console.error(error);
+      // TODO: Handle error state UI
+    }
+
+    if (data?.accessToken) {
+      Cookies.set("access_token", data.accessToken);
+      Cookies.set("role", data.role); // UNSAFE, temporary solution to demo role saved in state
+      router.push("/");
+    }
   };
 
   return (
