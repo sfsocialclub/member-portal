@@ -3,11 +3,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { roleAPI } from "./services/role";
 import { setupListeners } from "@reduxjs/toolkit/query";
+import rootReducer from "./rootReducer";
 
 export const store = configureStore({
-  reducer: {
-    [roleAPI.reducerPath]: roleAPI.reducer,
-  },
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(roleAPI.middleware),
 });

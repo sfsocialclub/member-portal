@@ -37,3 +37,6 @@ __pycache__
 
 # python virtualenv
 env/
+
+# env vars for mongo
+.env
