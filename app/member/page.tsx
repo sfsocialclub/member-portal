@@ -1,7 +1,9 @@
-import { LogoutButton } from "../components/auth/LogoutButton";
+"use client";
 
 export default function MemberPage() {
-  return <>
-    <h1 className="block">Member page</h1>
-  </>;
+  return (
+    <>
+      <h1 className="block">Member page</h1>
+    </>
+  );
 }
