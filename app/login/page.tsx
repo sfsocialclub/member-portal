@@ -1,45 +1,42 @@
-"use client";
-
-import React, { useState } from "react";
-import Cookies from "js-cookie";
-import { useLoginMutation } from "@/lib/services/account";
+"use client"
+import { useAppDispatch } from "@/lib/hooks";
+import Cookies from 'js-cookie';
+import { useState } from "react";
+import { authApi } from "../../lib/auth/authApi";
+import { authSlice } from "../../lib/auth/authSlice";
 import { useRouterWithOptimisticPathname } from "../hooks/useOptimisticRouter";
 
 export default function LoginPage() {
   const router = useRouterWithOptimisticPathname();
-  const [email, setEmail] = useState<string>("");
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>("");
-
-  const [login] = useLoginMutation();
+  const [login] = authApi.useLoginMutation();
+  const dispatch = useAppDispatch();
 
   const handleSubmit = async (e: any) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!email || !password) {
-      console.error("Blank input passed in");
-      return;
-    }
+    login({email, password})
+    .then(({data, error}) => {
+      if(data?.access_token) {
+        Cookies.set('access_token', data.access_token)
+        dispatch(authSlice.actions.setRole(data.role));
+        dispatch(authSlice.actions.setUserId(data.userId))
 
-    const { data, error } = await login({ email, password });
-
-    if (error) {
-      console.error(error);
+        router.push('/')
+      } else if (error) { throw error }
+    }).catch((error) => {
+      console.log(error)
       // TODO: Handle error state UI
-    }
-
-    if (data?.accessToken) {
-      Cookies.set("access_token", data.accessToken);
-      Cookies.set("role", data.role); // UNSAFE, temporary solution to demo role saved in state
-      router.push("/");
-    }
-  };
+    })
+  }
 
   const handleSignupNavigation = (
-    event: React.MouseEvent<HTMLAnchorElement>
-  ) => {
-    event.preventDefault();
-    router.push("/signup");
-  };
+      event: React.MouseEvent<HTMLAnchorElement>
+    ) => {
+      event.preventDefault();
+      router.push("/signup");
+    };
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-2xl">

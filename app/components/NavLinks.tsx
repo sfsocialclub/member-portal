@@ -1,14 +1,15 @@
 "use client"
 import Link from "next/link";
-import { usePathname } from "next/navigation"
-import { useAuthenticated } from "./useAuthenticated";
-import { LogoutButton } from "../auth/LogoutButton";
-import Cookies from "js-cookie";
+import { usePathname } from "next/navigation";
+import { LogoutButton } from "./LogoutButton";
+import { useAuthenticated } from "../hooks/useAuthenticated";
+import { useAppSelector } from "@/lib/hooks";
 
 export const NavLinks = () => {
     const pathname = usePathname();
     const isAuthenticated = useAuthenticated();
-    const isAdmin = Cookies.get('role') === 'admin';
+    const role = useAppSelector(state => state.auth.role)
+    const isAdmin = role === 'admin';
 
     if(!isAuthenticated) { return null }
 

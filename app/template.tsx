@@ -3,82 +3,81 @@
 import Cookies from "js-cookie";
 
 import { useEffect, useState } from "react";
-import LoadingPage from "./components/global/loadingPage";
-import { useLazyGetRoleQuery } from "@/lib/services/role";
-import { isFetchBaseQueryError } from "@/lib/services/functions/isBaseQueryError";
+import LoadingPage from "./components/loadingPage";
+import { Provider } from "react-redux";
+import { NavLinks } from "./components/NavLinks";
+import { authApi } from "../lib/auth/authApi";
+import { authSlice } from "../lib/auth/authSlice";
 import { useRouterWithOptimisticPathname } from "./hooks/useOptimisticRouter";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 export default function Template({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(false);
-  const router = useRouterWithOptimisticPathname();
+    const role = useAppSelector(state => state.auth.role)
+    const dispatch = useAppDispatch();
+    const [load] = authApi.useLazyLoadQuery();
+    const [loading, setLoading] = useState(true)
+    const router = useRouterWithOptimisticPathname();
+    const pathname = router.optimisticPath
 
   // 1. Specify protected and public routes
   const protectedRoutes = ["/admin", "/member"];
   const publicRoutes = ["/login", "/signup", "/"];
 
-  const [getRole] = useLazyGetRoleQuery();
+  // 2. Check if the current route is protected or public
+  const isPublicRoute = publicRoutes.includes(pathname)
+  const isAdminRoute = pathname === '/admin'
+  const isSignupRoute = router.optimisticPath === "/signup";
+  const isLoginRoute = router.optimisticPath === "/login";
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      // Check if the current route is protected or public
-      const isProtectedRoute = protectedRoutes.includes(router.optimisticPath);
-      const isPublicRoute = publicRoutes.includes(router.optimisticPath);
-      const isAdminRoute = router.optimisticPath === "/admin";
-      const isSignupRoute = router.optimisticPath === "/signup";
+    useEffect(() => {
+        const checkAuth = async () => {
+            // 3. Obtain the session from the cookie
+            const accessToken = Cookies.get("access_token");
 
-      console.log({ path: router.optimisticPath });
+            // 4. Redirect to /login if the user is not authenticated
+            if (!accessToken) {
+                if (['/login', '/signup'].includes(pathname)) return;
+                if (pathname !== '/login') router.push("/login");
+                return;
+            }
 
-      if (isSignupRoute) {
-        return;
-      }
+            // Get session on page load
+            if (!role) {
+                setLoading(true)
+                load().then(({ data, error }) => {
+                    if (data) {
+                        dispatch(authSlice.actions.setRole(data.role))
+                        dispatch(authSlice.actions.setUserId(data.userId))
+                    } else if (error) { throw error }
+                }).catch((err) => {
+                    Cookies.remove('access_token')
+                    router.push("/login")
+                })
+            } else {
+                setLoading(false)
 
-      setLoading(true);
+                // 5. Redirect admin route attempt for a non-admin user to /member
+                if (isAdminRoute && role !== 'admin') {
+                    console.log()
+                    router.push('/member')
+                    return;
+                }
 
-      // 3. Obtain the session from the cookie
-      const accessToken = Cookies.get("access_token");
+                // 6. Redirect public routes to role route if the user is authenticated
+                if (
+                    isPublicRoute
+                ) {
+                    router.push(`/${role}`)
+                    return;
+                }
+            }
 
-      // 4. Redirect to /login if the user is not authenticated
-      if (!accessToken) {
-        if (router.optimisticPath !== "/login") router.push("/login");
-        setLoading(false);
-        return;
-      }
+        };
 
-      const { data: response, error } = await getRole(accessToken);
+        checkAuth();
+    }, [pathname, role]);
 
-      setLoading(false);
-
-      if (isFetchBaseQueryError(error) && error.status === 401) {
-        router.push("/login");
-        return;
-      }
-
-      // 5. Redirect to /login if role could not be retrieved from request
-      if (isProtectedRoute && !response?.role) {
-        router.push("/login");
-        return;
-      }
-
-      // 6. Redirect admin route attempt for a non-admin user to /member
-      if (isAdminRoute && response?.role !== "admin") {
-        router.push("/member");
-        return;
-      }
-
-      // 7. Redirect public routes to role route if the user is authenticated
-      if (isPublicRoute && response?.role) {
-        router.push(`/${response?.role}`);
-        return;
-      }
-    };
-
-    checkAuth();
-  }, [router.optimisticPath]);
-
-  // Render the loading component while checking auth on non-login routes
-  return loading && router.optimisticPath !== "/login" ? (
-    <LoadingPage />
-  ) : (
-    <>{children}</>
-  );
+    // Render the loading component while checking auth on non-login routes
+    return loading && !isPublicRoute ? <LoadingPage /> :
+    <div className="w-full h-full flex items-center justify-center">{children}</div>
 }

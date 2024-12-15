@@ -2,7 +2,7 @@ import { useAppSelector } from "@/lib/hooks";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { RootState } from "../../lib/store";
-import { setOptimisticPath } from "@/lib/features/navigation/optimisticPathSlice";
+import { setOptimisticPath } from "@/lib/navigation/optimisticPathSlice";
 import { useEffect } from "react";
 
 export function useRouterWithOptimisticPathname() {
