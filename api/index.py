@@ -1,9 +1,15 @@
 from flask import Flask, session,request,jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
+from bson.objectid import ObjectId
 from mongodb_client import connector
 from datetime import timedelta
+import json
+from bson import json_util
+
+def parse_json(data):
+    return json.loads(json_util.dumps(data))
 
 app = Flask(__name__)
 DB = connector()
@@ -16,27 +22,34 @@ app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)    # Refresh token 
 jwt = JWTManager(app)
 app.config['SECRET_KEY'] = '<repalce with session token from next.js>'
 
-@app.route("/api/login", methods=['POST'])
+@app.route("/login", methods=['POST'])
 def login():
     data = request.get_json()
-    # TODO: retrieve user from db
 
-    ###### Mock role-based user login below ######
-    if data['email'] == 'admin@example.com':
-        access_token = create_access_token(identity='admin', fresh=True)
-        return jsonify(access_token=access_token, role='admin'), 200
-    elif data['email'] == 'member@example.com':
-        access_token = create_access_token(identity='member', fresh=True)
-        return jsonify(access_token=access_token, role='member'), 200
-    ##############################################
+    email = data['email']
+    password = data['password']
 
-    return jsonify(message="Invalid credentials"), 401
+    # TODO: Encrypted password implementation + query
+    user = DB.users.find_one({
+        "email":email,
+    })
+    
+    if user is None:
+        # The user was not found on the database
+        return jsonify(message="Invalid credentials"), 401
+    
+    additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
+    access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
+    return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
 
-@app.route('/api/role', methods=['GET'])
+# Called on UI page load (e.g. after page refresh)
+# Returns any necessary data stored in jwt
+@app.route("/load", methods = ['GET'])
 @jwt_required()
-def role():
-    role = get_jwt_identity()
-    return jsonify(role=role), 200
+def load():
+    claims = get_jwt()
+    return jsonify(claims)
+    
 
 @app.route("/register", methods=['POST'])
 def register():
@@ -60,8 +73,8 @@ def users():
 @app.route('/user/<userid>',methods=['GET'])
 @jwt_required()
 def user(userid):
-    user = DB.users.find_one({"id":userid})
-    return jsonify({"data":user}),200
+    user = DB.users.find_one({"_id":ObjectId(userid)})
+    return jsonify(parse_json(user)),200
 
 @app.route('/events',methods=['GET'])
 @jwt_required()

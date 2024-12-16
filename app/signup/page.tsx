@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useAppDispatch } from "@/lib/hooks";
+import { useSignupMutation } from "@/lib/auth/authApi";
+import { authSlice } from "@/lib/auth/authSlice";
 import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
-import { useSignupMutation } from "@/lib/services/account";
-import Link from "next/link";
+import { useState } from "react";
 import { useRouterWithOptimisticPathname } from "../hooks/useOptimisticRouter";
 
 export default function LoginPage() {
@@ -12,16 +12,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [retypePassword, setRetypePassword] = useState<string>("");
+  const dispatch = useAppDispatch();
 
   const [signup] = useSignupMutation();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-
-    if (!email || !password) {
-      console.error("Blank input passed in");
-      return;
-    }
 
     if (password !== retypePassword) {
       // TODO: Handle this in the UI
@@ -29,18 +25,19 @@ export default function LoginPage() {
       return;
     }
 
-    const { data, error } = await signup({ email, password });
-
-    if (error) {
-      console.error(error);
+    signup({email, password})
+    .then(({data, error}) => {
+      if(data?.access_token) {
+        Cookies.set('access_token', data.access_token)
+        dispatch(authSlice.actions.setRole(data.role));
+        dispatch(authSlice.actions.setUserId(data.userId))
+        
+        router.push('/')
+      } else if (error) { throw error }
+    }).catch((error) => {
+      console.log(error)
       // TODO: Handle error state UI
-    }
-
-    if (data?.accessToken) {
-      Cookies.set("access_token", data.accessToken);
-      Cookies.set("role", data.role); // UNSAFE, temporary solution to demo role saved in state
-      router.push("/");
-    }
+    })
   };
 
   const handleLoginNavigation = (
