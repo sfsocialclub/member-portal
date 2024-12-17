@@ -2,46 +2,36 @@
 
 import Cookies from "js-cookie";
 
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useEffect, useState } from "react";
-import LoadingPage from "./components/loadingPage";
-import { Provider } from "react-redux";
-import { NavLinks } from "./components/NavLinks";
 import { authApi } from "../lib/auth/authApi";
 import { authSlice } from "../lib/auth/authSlice";
+import LoadingPage from "./components/loadingPage";
 import { useRouterWithOptimisticPathname } from "./hooks/useOptimisticRouter";
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
-export default function Template({ children }: { children: React.ReactNode }) {
+export default function ProtectedRouteProvider({ children }: { children: React.ReactNode }) {
     const role = useAppSelector(state => state.auth.role)
     const dispatch = useAppDispatch();
     const [load] = authApi.useLazyLoadQuery();
     const [loading, setLoading] = useState(true)
     const router = useRouterWithOptimisticPathname();
-    const pathname = router.optimisticPath
-
-  // 1. Specify protected and public routes
-  const protectedRoutes = ["/admin", "/member"];
-  const publicRoutes = ["/login", "/signup", "/"];
-
-  // 2. Check if the current route is protected or public
-  const isPublicRoute = publicRoutes.includes(pathname)
-  const isAdminRoute = pathname === '/admin'
-  const isSignupRoute = router.optimisticPath === "/signup";
-  const isLoginRoute = router.optimisticPath === "/login";
+    const { optimisticPath: pathname, isPublicRoute } = router
+    const isAdminRoute = pathname === '/admin';
 
     useEffect(() => {
         const checkAuth = async () => {
-            // 3. Obtain the session from the cookie
+            // 1. Obtain the session from the cookie
             const accessToken = Cookies.get("access_token");
 
-            // 4. Redirect to /login if the user is not authenticated
+            // 2. Redirect to /login if the user is not authenticated
             if (!accessToken) {
+                setLoading(false)
                 if (['/login', '/signup'].includes(pathname)) return;
                 if (pathname !== '/login') router.push("/login");
                 return;
             }
 
-            // Get session on page load
+            // 3. Get session on page load
             if (!role) {
                 setLoading(true)
                 load().then(({ data, error }) => {
@@ -56,18 +46,18 @@ export default function Template({ children }: { children: React.ReactNode }) {
             } else {
                 setLoading(false)
 
-                // 5. Redirect admin route attempt for a non-admin user to /member
+                // 4. Redirect admin route attempt for a non-admin user to /member
                 if (isAdminRoute && role !== 'admin') {
                     console.log()
                     router.push('/member')
                     return;
                 }
 
-                // 6. Redirect public routes to role route if the user is authenticated
+                // 5. Redirect public routes to role route if the user is authenticated
                 if (
                     isPublicRoute
                 ) {
-                    router.push(`/${role}`)
+                    router.push(`/home`)
                     return;
                 }
             }
@@ -78,6 +68,5 @@ export default function Template({ children }: { children: React.ReactNode }) {
     }, [pathname, role]);
 
     // Render the loading component while checking auth on non-login routes
-    return loading && !isPublicRoute ? <LoadingPage /> :
-    <div className="w-full h-full flex items-center justify-center">{children}</div>
+    return loading && !isPublicRoute ? <LoadingPage /> : <>{children}</>
 }

@@ -8,5 +8,5 @@ export const WelcomeMessage = () => {
 
     if(!data?.name) return null
     
-    return  <p className="block">Welcome {data.name}</p>
+    return  <h1 className="text-3xl text-base-content"><span className="font-semibold">Hi, {data.name}!</span> <em>Welcome to your Dashboard.</em> </h1>
 }

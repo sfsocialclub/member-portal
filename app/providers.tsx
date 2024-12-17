@@ -1,12 +1,18 @@
 'use client';
-import { Provider } from "react-redux"
+import { Provider } from "react-redux";
 
-import { NavLinks } from "./components/NavLinks";
 import { store } from "@/lib/store";
+import ProtectedRouteProvider from "./template";
+import { ProtectedPageLayout } from "./ProtectedPageLayout";
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
-    return (<Provider store={store}>
-        <NavLinks />
-        {children}
-    </Provider>)
+    return (
+        <Provider store={store}>
+            <ProtectedRouteProvider>
+                <ProtectedPageLayout>
+                    {children}
+                </ProtectedPageLayout>
+            </ProtectedRouteProvider>
+        </Provider>
+    )
 }
