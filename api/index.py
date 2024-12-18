@@ -56,7 +56,23 @@ def load():
 
 @app.route("/register", methods=['POST'])
 def register():
-    pass
+    if request.method == 'POST':
+        try:
+            user_info = request.get_json()
+            DB.users.insert_one(user_info)
+            user = DB.users.find_one({"name":user_info['name']})
+            if user:
+                user_id = str(user['_id'])
+                logger.info(f"[+] user found {user_id}")
+                return jsonify({"id":user_id}), 200
+            else:
+                logger.error("[!] Error with request")
+                return jsonify({"failed","user not created"}), 500
+        except Exception as e:
+            logger.error(e)
+            return jsonify({"error":"request failed resend data"}), 400
+
+
 
 @app.route('/index')
 @jwt_required()
