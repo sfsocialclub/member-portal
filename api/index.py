@@ -7,6 +7,9 @@ from mongodb_client import connector
 from datetime import timedelta
 import json
 from bson import json_util
+import logging
+
+logger = logging.getLogger(__name__)
 
 def parse_json(data):
     return json.loads(json_util.dumps(data))
@@ -87,6 +90,23 @@ def events():
 def event(eventID):
     event = DB.events.find({"id":eventID})
     return jsonify({"data":event}),200
+
+@app.route('/create-event/', methods=["POST"])
+# @jwt_required()
+def create_event():
+    if request.method == 'POST':
+        try:
+            event = request.get_json()
+            logger.info(f"[+] current event {event}")
+            DB.events.insert_one(event)
+            event_data = DB.events.find_one({"name": event['name']})
+            event_data['_id'] = str(event_data['_id'])  # Convert ObjectId to string
+            return jsonify({"id": event_data['_id']}), 200
+        except Exception as e:
+            print(e)
+            return jsonify({"error":"Failed to send data"}), 500
+    else:
+        return jsonify({"error":"Most be a post request"}), 400
 
 @app.route('/token', methods=['POST'])
 def create_token():
