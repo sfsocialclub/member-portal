@@ -5,6 +5,12 @@ import os
 
 client = MongoClient()
 
+"""
+    NOTE: Mongo client ip access list currently set to be accessible anywhere.
+     I've done this for development purposes but before we push to prod it should be set to a static IP.
+
+"""
+
 USERNAME = os.environ["MONGO_USERNAME"]
 PASSWORD = os.environ["MONGO_PASSWORD"]
 URI = f"mongodb+srv://{USERNAME}:{PASSWORD}@cluster1.nfvpz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1"
