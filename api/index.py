@@ -108,7 +108,7 @@ def event(eventID):
     return jsonify({"data":event}),200
 
 @app.route('/create-event/', methods=["POST"])
-# @jwt_required()
+@jwt_required()
 def create_event():
     if request.method == 'POST':
         try:
