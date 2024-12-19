@@ -8,6 +8,7 @@ from datetime import timedelta
 import json
 from bson import json_util
 import logging
+import bcrypt
 
 logger = logging.getLogger(__name__)
 
@@ -31,19 +32,25 @@ def login():
 
     email = data['email']
     password = data['password']
+    # hashpassword
+    password = password.encode("utf-8")
+    
 
     # TODO: Encrypted password implementation + query
     user = DB.users.find_one({
         "email":email,
     })
     
+
     if user is None:
         # The user was not found on the database
         return jsonify(message="Invalid credentials"), 401
-    
-    additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
-    access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
-    return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
+    if bcrypt.checkpw(password, user['password']):
+        additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
+        access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
+        return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
+    else:
+        logger.error("[!] Failed credential check")
 
 # Called on UI page load (e.g. after page refresh)
 # Returns any necessary data stored in jwt
@@ -59,7 +66,13 @@ def register():
     if request.method == 'POST':
         try:
             user_info = request.get_json()
-            DB.users.insert_one(user_info)
+            enhanced_user_info = {"name":user_info['name'],
+                 "email":user_info["email"],
+                 "password": bcrypt.hashpw(user_info["password"].encode("utf-8"),bcrypt.gensalt()), # hold of on adding salt bycrypt.gensalt()
+                 "role": "user" # admins should be not be made through portal
+                }
+            logger.info(f"[+] user info: {enhanced_user_info}")
+            DB.users.insert_one(enhanced_user_info)
             user = DB.users.find_one({"name":user_info['name']})
             if user:
                 user_id = str(user['_id'])
