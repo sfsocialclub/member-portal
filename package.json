@@ -33,5 +33,9 @@
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6"
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
   }
 }
