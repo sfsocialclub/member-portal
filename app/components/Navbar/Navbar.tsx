@@ -9,8 +9,15 @@ export const Navbar = () => {
   const role = useAppSelector(state => state.auth.role)
   const isAdmin = role === 'admin';
 
+  const handleMenuItemClick = () =>{
+      const elem: HTMLElement = document.activeElement as HTMLElement;
+      if (elem) {
+        elem?.blur();
+      }
+    };
+
   return (
-    <div className="navbar bg-white">
+    <div className="navbar bg-white fixed top-0 z-10">
       <div className="navbar-start flex-1">
         <div className="dropdown z-10">
           <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -29,19 +36,19 @@ export const Navbar = () => {
           </div>
           <ul
             tabIndex={0}
-            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
-            <li><Link className={`${pathname === '/home' ? 'font-bold link-primary' : ''}`} href="/home">
+            className="menu menu-sm dropdown-content bg-white rounded-box z-1 mt-3 w-52 p-2 shadow">
+            <li onClick={handleMenuItemClick}><Link  className={`${pathname === '/home' ? 'font-bold link-primary' : ''}`} href="/home">
               Home
             </Link></li>
-            <li><Link className={`${pathname === '/calendar' ? 'font-bold link-primary' : ''}`} href="/calendar">
+            <li onClick={handleMenuItemClick}><Link className={`${pathname === '/calendar' ? 'font-bold link-primary' : ''}`} href="/calendar">
               Calendar
             </Link></li>
-            <li><Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
+            <li onClick={handleMenuItemClick}><Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
               Point shop
             </Link></li>
             {
               isAdmin && (
-                <li><Link
+                <li onClick={handleMenuItemClick}><Link
                   className={`${pathname === '/admin' ? 'font-bold link-primary' : ''}`}
                   href="/admin"
                 >

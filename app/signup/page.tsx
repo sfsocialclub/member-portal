@@ -26,13 +26,12 @@ export default function LoginPage() {
       return;
     }
 
-    signup({ name, email, password })
+    signup({ name,email, password })
       .then(({ data, error }) => {
         if (data?.userId) {
-          alert("User created successfully!");
+alert("User created successfully!");
           router.push("/login");
-        } else if (error) {
-          throw error;
+        } else if (error) { throw error;
         }
       })
       .catch((error) => {
@@ -50,6 +49,7 @@ export default function LoginPage() {
 
   return (
     <div className="h-full w-full flex items-center justify-center">
+
       <div className="flex flex-col gap-4 w-full max-w-2xl">
         <div className="w-full max-w-2xl bg-base-100 flex flex-col p-8 rounded-2xl">
           <div className="w-full h-32 flex items-center justify-center">
@@ -88,7 +88,7 @@ export default function LoginPage() {
               onChange={(e) => setRetypePassword(e.target.value)}
               value={retypePassword}
             />
-            <button className="btn" type="submit" onClick={handleSubmit}>
+            <button className="btn" type="submit"onClick={handleSubmit}>
               Create account
             </button>
           </form>

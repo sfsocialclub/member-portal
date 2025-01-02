@@ -40,15 +40,5 @@ module.exports = {
   },
   plugins: [
     require('@tailwindcss/typography'),
-    require('daisyui'),
   ],
-  daisyui: {
-    themes: [
-      {
-        sfsocialclub: {
-          "base-100":"#F6F3EE"
-        }
-      }
-    ],
-  },
 }

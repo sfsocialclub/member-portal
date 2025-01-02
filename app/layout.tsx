@@ -9,8 +9,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-theme="sfsocialclub" className="font-morandi">
-      <body className="bg-base-100 h-screen w-full">
-          <main className="h-screen w-full">
+      <body className="bg-base-100 w-full h-screen">
+          <main className="h-full w-full pt-[64px]">
             <Providers><ProtectedRouteProvider>{children}</ProtectedRouteProvider></Providers>
           </main>
       </body>
