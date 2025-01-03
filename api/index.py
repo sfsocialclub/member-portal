@@ -10,6 +10,33 @@ from bson import json_util
 import logging
 import bcrypt
 
+
+"""
+    TODO:
+        1. Fix 415 status code on registration
+        2. finish crud operations
+        3. security checks
+            a. secu
+        4. every user has points
+            if you go to event you get a point
+            if you dont show up subtract a point
+        5. events add points to events 
+
+
+        user
+            name
+            password
+            email
+            points
+            events-attended
+            events-created
+            events-missed
+
+
+Returns:
+    _type_: _description_
+"""
+
 logger = logging.getLogger(__name__)
 
 def parse_json(data):
@@ -59,8 +86,23 @@ def login():
 def load():
     claims = get_jwt()
     return jsonify(claims)
-    
 
+@app.route('/index')
+@jwt_required()
+def index():
+    # Access the identity of the current user with get_jwt_identity
+    current_user_id = get_jwt_identity()
+    
+@app.route('/users/',methods=['GET'])
+@jwt_required()
+def users():
+    current_role = session.get('role')
+    if current_role and current_role == 'admin':
+        users = DB.users.find({})
+        return jsonify({"data":users})
+    return jsonify({"unauthorized":"Only admins and view this data"}), 403
+
+# Creates
 @app.route("/register", methods=['POST'])
 def register():
     if request.method == 'POST':
@@ -84,41 +126,6 @@ def register():
         except Exception as e:
             logger.error(e)
             return jsonify({"error":"request failed resend data"}), 400
-
-
-
-@app.route('/index')
-@jwt_required()
-def index():
-    # Access the identity of the current user with get_jwt_identity
-    current_user_id = get_jwt_identity()
-    
-@app.route('/users/',methods=['GET'])
-@jwt_required()
-def users():
-    current_role = session.get('role')
-    if current_role and current_role == 'admin':
-        users = DB.users.find({})
-        return jsonify({"data":users})
-    return jsonify({"unauthorized":"Only admins and view this data"}), 403
-
-@app.route('/user/<userid>',methods=['GET'])
-@jwt_required()
-def user(userid):
-    user = DB.users.find_one({"_id":ObjectId(userid)})
-    return jsonify(parse_json(user)),200
-
-@app.route('/events',methods=['GET'])
-@jwt_required()
-def events():
-    event = DB.events.find({})
-    return jsonify({"data":event}),200
-
-@app.route('/event/<eventID>',methods=['GET'])
-@jwt_required()
-def event(eventID):
-    event = DB.events.find({"id":eventID})
-    return jsonify({"data":event}),200
 
 @app.route('/create-event/', methods=["POST"])
 @jwt_required()
@@ -154,7 +161,59 @@ def create_token():
     access_token = create_access_token(identity=user['name'])
     return jsonify({ "token": access_token, "user_id": user['name'] }), 200
 
+# Reads
+@app.route('/user/<userid>',methods=['GET'])
+@jwt_required()
+def user(userid):
+    user = DB.users.find_one({"_id":ObjectId(userid)})
+    return jsonify(parse_json(user)),200
 
+@app.route('/events',methods=['GET'])
+@jwt_required()
+def events():
+    event = DB.events.find({})
+    return jsonify({"data":event}),200
+
+@app.route('/event/<eventID>',methods=['GET'])
+@jwt_required()
+def event(eventID):
+    event = DB.events.find({"id":eventID})
+    return jsonify({"data":event}),200
+
+# Updates
+@app.route('/update-event/<eventID>',method=['PUT'])
+@jwt_required()
+def update_event(eventID):
+    pass
+
+@app.route('/update-user/<userID>',method=['PUT'])
+@jwt_required()
+def update_user(userID):
+    pass
+
+@app.route('/update-password/<userID>',method=['PUT'])
+@jwt_required()
+def update_password(userID):
+    # NOTE: Fix code
+    try: 
+        encrypted_pass = bcrypt.hashpw('YOUR_PASS_HERE'.encode("utf-8"),bcrypt.gensalt())
+        user_filter = {"email": "YOUR_EMAIL_ADDRESS"}
+        new_field = {"$set": {"password": encrypted_pass}}
+        DB.users.update_one(user_filter, new_field)
+        print('updated password successfully')
+    except Exception as e:
+        print(e)
+
+# Deletes
+@app.route('/delete-event/<eventID>',method=['DELETE'])
+@jwt_required()
+def delete_event(eventID):
+    pass
+
+@app.route('/delete-user/<userID>',method=['DELETE'])
+@jwt_required()
+def delete_user(userID):
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True,port=8000)
