@@ -32,6 +32,11 @@ import bcrypt
             events-created
             events-missed
 
+        events
+            name
+            users-attended
+            qr-code
+            ics-file
 
 Returns:
     _type_: _description_
@@ -106,26 +111,26 @@ def users():
 @app.route("/register", methods=['POST'])
 def register():
     if request.method == 'POST':
-        try:
-            user_info = request.get_json()
-            enhanced_user_info = {"name":user_info['name'],
-                 "email":user_info["email"],
-                 "password": bcrypt.hashpw(user_info["password"].encode("utf-8"),bcrypt.gensalt()), # hold of on adding salt bycrypt.gensalt()
-                 "role": "user" # admins should be not be made through portal
-                }
-            logger.info(f"[+] user info: {enhanced_user_info}")
-            DB.users.insert_one(enhanced_user_info)
-            user = DB.users.find_one({"name":user_info['name']})
-            if user:
-                user_id = str(user['_id'])
-                logger.info(f"[+] user found {user_id}")
-                return jsonify({"id":user_id}), 200
-            else:
-                logger.error("[!] Error with request")
-                return jsonify({"failed","user not created"}), 500
-        except Exception as e:
-            logger.error(e)
-            return jsonify({"error":"request failed resend data"}), 400
+        # try:
+        user_info = request.get_json()
+        enhanced_user_info = {"name":user_info['name'],
+            "email":user_info["email"],
+            "password": bcrypt.hashpw(user_info["password"].encode("utf-8"),bcrypt.gensalt()), # hold of on adding salt bycrypt.gensalt()
+            "role": "user" # admins should be not be made through portal
+            }
+        print(f"[+] user info: {enhanced_user_info}")
+        DB.users.insert_one(enhanced_user_info)
+        user = DB.users.find_one({"name":user_info['name']})
+        if user:
+            user_id = str(user['_id'])
+            logger.info(f"[+] user found {user_id}")
+            return jsonify({"id":user_id}), 200
+        else:
+            logger.error("[!] Error with request")
+            return jsonify({"failed","user not created"}), 500
+        # except Exception as e:
+        #     logger.error(e)
+        #     return jsonify({"error":"request failed resend data"}), 400
 
 @app.route('/create-event/', methods=["POST"])
 @jwt_required()
@@ -181,39 +186,39 @@ def event(eventID):
     return jsonify({"data":event}),200
 
 # Updates
-@app.route('/update-event/<eventID>',method=['PUT'])
-@jwt_required()
-def update_event(eventID):
-    pass
+# @app.route('/update-event/<eventID>',method=['PUT'])
+# @jwt_required()
+# def update_event(eventID):
+#     pass
 
-@app.route('/update-user/<userID>',method=['PUT'])
-@jwt_required()
-def update_user(userID):
-    pass
+# @app.route('/update-user/<userID>',method=['PUT'])
+# @jwt_required()
+# def update_user(userID):
+#     pass
 
-@app.route('/update-password/<userID>',method=['PUT'])
-@jwt_required()
-def update_password(userID):
-    # NOTE: Fix code
-    try: 
-        encrypted_pass = bcrypt.hashpw('YOUR_PASS_HERE'.encode("utf-8"),bcrypt.gensalt())
-        user_filter = {"email": "YOUR_EMAIL_ADDRESS"}
-        new_field = {"$set": {"password": encrypted_pass}}
-        DB.users.update_one(user_filter, new_field)
-        print('updated password successfully')
-    except Exception as e:
-        print(e)
+# @app.route('/update-password/<userID>',method=['PUT'])
+# @jwt_required()
+# def update_password(userID):
+#     # NOTE: Fix code
+#     try: 
+#         encrypted_pass = bcrypt.hashpw('YOUR_PASS_HERE'.encode("utf-8"),bcrypt.gensalt())
+#         user_filter = {"email": "YOUR_EMAIL_ADDRESS"}
+#         new_field = {"$set": {"password": encrypted_pass}}
+#         DB.users.update_one(user_filter, new_field)
+#         print('updated password successfully')
+#     except Exception as e:
+#         print(e)
 
 # Deletes
-@app.route('/delete-event/<eventID>',method=['DELETE'])
-@jwt_required()
-def delete_event(eventID):
-    pass
+# @app.route('/delete-event/<eventID>',method=['DELETE'])
+# @jwt_required()
+# def delete_event(eventID):
+#     pass
 
-@app.route('/delete-user/<userID>',method=['DELETE'])
-@jwt_required()
-def delete_user(userID):
-    pass
+# @app.route('/delete-user/<userID>',method=['DELETE'])
+# @jwt_required()
+# def delete_user(userID):
+#     pass
 
 if __name__ == '__main__':
     app.run(debug=True,port=8000)
