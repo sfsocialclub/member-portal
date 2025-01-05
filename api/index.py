@@ -9,38 +9,7 @@ import json
 from bson import json_util
 import logging
 import bcrypt
-
-
-"""
-    TODO:
-        1. Fix 415 status code on registration
-        2. finish crud operations
-        3. security checks
-            a. secu
-        4. every user has points
-            if you go to event you get a point
-            if you dont show up subtract a point
-        5. events add points to events 
-
-
-        user
-            name
-            password
-            email
-            points
-            events-attended
-            events-created
-            events-missed
-
-        events
-            name
-            users-attended
-            qr-code
-            ics-file
-
-Returns:
-    _type_: _description_
-"""
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -67,8 +36,6 @@ def login():
     # hashpassword
     password = password.encode("utf-8")
     
-
-    # TODO: Encrypted password implementation + query
     user = DB.users.find_one({
         "email":email,
     })
@@ -110,13 +77,18 @@ def users():
 # Creates
 @app.route("/register", methods=['POST'])
 def register():
-    if request.method == 'POST':
-        # try:
+    try:
         user_info = request.get_json()
-        enhanced_user_info = {"name":user_info['name'],
+        enhanced_user_info = {
+            "name":user_info['name'],
             "email":user_info["email"],
             "password": bcrypt.hashpw(user_info["password"].encode("utf-8"),bcrypt.gensalt()), # hold of on adding salt bycrypt.gensalt()
-            "role": "user" # admins should be not be made through portal
+            "role": "user", # admins should be not be made through portal
+            "points": 0.0,
+            "events_attended": [],
+            "events_created": [],
+            "events_missed": [],
+            "created_at": datetime.datetime.now()
             }
         print(f"[+] user info: {enhanced_user_info}")
         DB.users.insert_one(enhanced_user_info)
@@ -128,16 +100,28 @@ def register():
         else:
             logger.error("[!] Error with request")
             return jsonify({"failed","user not created"}), 500
-        # except Exception as e:
-        #     logger.error(e)
-        #     return jsonify({"error":"request failed resend data"}), 400
+    except Exception as e:
+        logger.error(e)
+        return jsonify({"error":"request failed resend data"}), 400
 
 @app.route('/create-event/', methods=["POST"])
 @jwt_required()
 def create_event():
     if request.method == 'POST':
         try:
-            event = request.get_json()
+            event_info = request.get_json()
+            event = {
+                "name": event_info["name"],
+                "host": event_info['host'],
+                "location":event_info['location'],
+                "description": event_info['description'],
+                "partiful_link":event_info["partiful_link"],
+                "event_date":event_info["event_date"],
+                "qr_codes":[],
+                "attended": [],
+                "is_paid":event_info["is_paid"],
+                "created_at":datetime.datetime.now()
+            }
             logger.info(f"[+] current event {event}")
             DB.events.insert_one(event)
             event_data = DB.events.find_one({"name": event['name']})
@@ -145,13 +129,12 @@ def create_event():
             return jsonify({"id": event_data['_id']}), 200
         except Exception as e:
             print(e)
-            return jsonify({"error":"Failed to send data"}), 500
+            return jsonify({"error":"Failed to send data"}), 400
     else:
         return jsonify({"error":"Most be a post request"}), 400
 
 @app.route('/token', methods=['POST'])
 def create_token():
-    
     username = request.json.get("name", None)
     password = request.json.get("password", None)
     # Query your database for username and password
@@ -170,55 +153,120 @@ def create_token():
 @app.route('/user/<userid>',methods=['GET'])
 @jwt_required()
 def user(userid):
-    user = DB.users.find_one({"_id":ObjectId(userid)})
-    return jsonify(parse_json(user)),200
+    try:
+        user = DB.users.find_one({"_id":ObjectId(userid)})
+        return jsonify(parse_json(user)),200
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"issue with request"}), 400
 
 @app.route('/events',methods=['GET'])
 @jwt_required()
 def events():
-    event = DB.events.find({})
-    return jsonify({"data":event}),200
+    try:
+        event = DB.events.find({})
+        return jsonify({"data":event}),200
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"issue with request"}), 400
 
 @app.route('/event/<eventID>',methods=['GET'])
 @jwt_required()
 def event(eventID):
-    event = DB.events.find({"id":eventID})
-    return jsonify({"data":event}),200
+    try:
+        event = DB.events.find({"id":eventID})
+        return jsonify({"data":event}),200
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"issue with request"}), 400
 
 # Updates
-# @app.route('/update-event/<eventID>',method=['PUT'])
-# @jwt_required()
-# def update_event(eventID):
-#     pass
+@app.route('/update-event/<eventID>',method=['PUT'])
+@jwt_required()
+def update_event(eventID):
+    try:
+        event_data = request.get_json()
+        event_filter = {"_id": ObjectId(eventID)}
+        update_operation = {"$set": event_data}
+        
+        result = DB.events.update_one(event_filter, update_operation)
+        
+        if result.matched_count > 0:
+            return jsonify({"message": "Event updated successfully"}), 200
+        else:
+            return jsonify({"error": "Event not found"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to update event"}), 500
 
-# @app.route('/update-user/<userID>',method=['PUT'])
-# @jwt_required()
-# def update_user(userID):
-#     pass
+@app.route('/update-user/<userID>',method=['PUT'])
+@jwt_required()
+def update_user(userID):
+    try:
+        user_data = request.get_json()
+        user_filter = {"_id": ObjectId(userID)}
+        update_operation = {"$set": user_data}
+        
+        result = DB.users.update_one(user_filter, update_operation)
+        
+        if result.matched_count > 0:
+            return jsonify({"message": "User updated successfully"}), 200
+        else:
+            return jsonify({"error": "User not found"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to update user"}), 500
 
-# @app.route('/update-password/<userID>',method=['PUT'])
-# @jwt_required()
-# def update_password(userID):
-#     # NOTE: Fix code
-#     try: 
-#         encrypted_pass = bcrypt.hashpw('YOUR_PASS_HERE'.encode("utf-8"),bcrypt.gensalt())
-#         user_filter = {"email": "YOUR_EMAIL_ADDRESS"}
-#         new_field = {"$set": {"password": encrypted_pass}}
-#         DB.users.update_one(user_filter, new_field)
-#         print('updated password successfully')
-#     except Exception as e:
-#         print(e)
+@app.route('/update-password/<userID>',method=['PUT'])
+@jwt_required()
+def update_password(userID):
+    try: 
+        user_info = request.json()
+        user_email = user_info.get("email")
+        password = user_info.get("password")
+        if user_email:
+            encrypted_pass = bcrypt.hashpw(password.encode("utf-8"),bcrypt.gensalt())
+            user_filter = {"email": user_email}
+            new_field = {"$set": {"password": encrypted_pass}}
+            DB.users.update_one(user_filter, new_field)
+            print('updated password successfully')
+            return jsonify({"sucess":f"{user_email} password has been updated"}), 200
+        else:
+            return jsonify({"error":"User email was not in request"}), 400
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"Issue with request"}), 400
 
 # Deletes
-# @app.route('/delete-event/<eventID>',method=['DELETE'])
-# @jwt_required()
-# def delete_event(eventID):
-#     pass
+@app.route('/delete-event/<eventID>', methods=['DELETE'])
+@jwt_required()
+def delete_event(eventID):
+    try:
+        event_filter = {"_id": ObjectId(eventID)}
+        result = DB.events.delete_one(event_filter)
+        
+        if result.deleted_count > 0:
+            return jsonify({"message": "Event deleted successfully"}), 200
+        else:
+            return jsonify({"error": "Event not found"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to delete event"}), 500
 
-# @app.route('/delete-user/<userID>',method=['DELETE'])
-# @jwt_required()
-# def delete_user(userID):
-#     pass
-
+@app.route('/delete-user/<userID>', methods=['DELETE'])
+@jwt_required()
+def delete_user(userID):
+    try:
+        user_filter = {"_id": ObjectId(userID)}
+        result = DB.users.delete_one(user_filter)
+        
+        if result.deleted_count > 0:
+            return jsonify({"message": "User deleted successfully"}), 200
+        else:
+            return jsonify({"error": "User not found"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to delete user"}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True,port=8000)
