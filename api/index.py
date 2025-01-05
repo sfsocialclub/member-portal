@@ -45,6 +45,8 @@ def login():
         # The user was not found on the database
         return jsonify(message="Invalid credentials"), 401
     if bcrypt.checkpw(password, user['password']):
+        #store userID in current session
+        session['userID'] = str(user['_id'])
         additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
         access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
         return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
@@ -119,7 +121,11 @@ def create_event():
                 "event_date":event_info["event_date"],
                 "qr_codes":[],
                 "attended": [],
+                "going": [],
+                "maybes":[],
+                "ics_file": event_info['ics_file'],
                 "is_paid":event_info["is_paid"],
+                "participation_points": event_info["points"],
                 "created_at":datetime.datetime.now()
             }
             logger.info(f"[+] current event {event}")
@@ -185,6 +191,9 @@ def event(eventID):
 @jwt_required()
 def update_event(eventID):
     try:
+        if permission_to_modify_event(eventID,session['userID']) is False:
+            return jsonify({"error":"Unauthorized access"}), 403
+        
         event_data = request.get_json()
         event_filter = {"_id": ObjectId(eventID)}
         update_operation = {"$set": event_data}
@@ -203,6 +212,9 @@ def update_event(eventID):
 @jwt_required()
 def update_user(userID):
     try:
+        if userID is not session["userID"]:
+            return jsonify({"error":"Unauthorized access"}), 403
+        
         user_data = request.get_json()
         user_filter = {"_id": ObjectId(userID)}
         update_operation = {"$set": user_data}
@@ -221,18 +233,23 @@ def update_user(userID):
 @jwt_required()
 def update_password(userID):
     try: 
+        if userID != session['userID']:
+            return jsonify({"error":"Unauthorized access"}), 403
         user_info = request.json()
         user_email = user_info.get("email")
         password = user_info.get("password")
         if user_email:
-            encrypted_pass = bcrypt.hashpw(password.encode("utf-8"),bcrypt.gensalt())
-            user_filter = {"email": user_email}
-            new_field = {"$set": {"password": encrypted_pass}}
-            DB.users.update_one(user_filter, new_field)
-            print('updated password successfully')
-            return jsonify({"sucess":f"{user_email} password has been updated"}), 200
+            # user email and userID must match with user from mongo
+            mongo_user = DB.users.find_one({"email":user_email})
+            if userID == str(mongo_user["_id"]) and mongo_user["email"] == user_email:
+                encrypted_pass = bcrypt.hashpw(password.encode("utf-8"),bcrypt.gensalt())
+                user_filter = {"email": user_email}
+                new_field = {"$set": {"password": encrypted_pass}}
+                DB.users.update_one(user_filter, new_field)
+                print('updated password successfully')
+                return jsonify({"sucess":f"{user_email} password has been updated"}), 200
         else:
-            return jsonify({"error":"User email was not in request"}), 400
+            return jsonify({"error":"User email was not in request, or invalid"}), 400
     except Exception as e:
         print(e)
         return jsonify({"error":"Issue with request"}), 400
@@ -242,6 +259,9 @@ def update_password(userID):
 @jwt_required()
 def delete_event(eventID):
     try:
+        if permission_to_modify_event(eventID,session['userID']) is False:
+            return jsonify({"error":"Unauthorized access"}), 403
+        
         event_filter = {"_id": ObjectId(eventID)}
         result = DB.events.delete_one(event_filter)
         
@@ -257,6 +277,9 @@ def delete_event(eventID):
 @jwt_required()
 def delete_user(userID):
     try:
+        if permission_to_modify_user(userID) is False:
+            return jsonify({"error":"Unauthorized access"}), 403
+        
         user_filter = {"_id": ObjectId(userID)}
         result = DB.users.delete_one(user_filter)
         
@@ -268,5 +291,21 @@ def delete_user(userID):
         print(e)
         return jsonify({"error": "Failed to delete user"}), 500
     
+def permission_to_modify_event(eventID,userID):
+         # Only admins and the host of the event can remove the event
+        event = DB.events.find_one({"_id":ObjectId(eventID)})
+        current_user = DB.users.find_one({"_id":userID})
+        if event['host'] != current_user["email"] or current_user['role'] != 'admin':
+            return False
+        else:
+            return True
+        
+def permission_to_modify_user(userID):
+        # Admins can delete any user but a user can only delete themselves
+        if session['role'] is not 'admin' or userID is not session['userID']:
+            return False
+        else:
+            return True
+        
 if __name__ == '__main__':
     app.run(debug=True,port=8000)
