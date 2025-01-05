@@ -3,6 +3,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 import os
+import certifi
 
 client = MongoClient()
 
@@ -19,7 +20,7 @@ URI = f"mongodb+srv://{USERNAME}:{PASSWORD}@cluster1.nfvpz.mongodb.net/?retryWri
 
 def connector():
     # Create a new client and connect to the server
-    client = MongoClient(URI, server_api=ServerApi('1'))
+    client = MongoClient(URI, tlsCAFile=certifi.where())
     # Send a ping to confirm a successful connection
     try:
         client.admin.command('ping')
