@@ -181,7 +181,7 @@ def event(eventID):
         return jsonify({"error":"issue with request"}), 400
 
 # Updates
-@app.route('/update-event/<eventID>',method=['PUT'])
+@app.route('/update-event/<eventID>',methods=['PUT'])
 @jwt_required()
 def update_event(eventID):
     try:
@@ -199,7 +199,7 @@ def update_event(eventID):
         print(e)
         return jsonify({"error": "Failed to update event"}), 500
 
-@app.route('/update-user/<userID>',method=['PUT'])
+@app.route('/update-user/<userID>',methods=['PUT'])
 @jwt_required()
 def update_user(userID):
     try:
@@ -217,7 +217,7 @@ def update_user(userID):
         print(e)
         return jsonify({"error": "Failed to update user"}), 500
 
-@app.route('/update-password/<userID>',method=['PUT'])
+@app.route('/update-password/<userID>',methods=['PUT'])
 @jwt_required()
 def update_password(userID):
     try: 
