@@ -161,7 +161,12 @@ def create_token():
 def user(userid):
     try:
         user = DB.users.find_one({"_id":ObjectId(userid)})
-        return jsonify(parse_json(user)),200
+        return jsonify({
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "points": user.get("points"),
+            "events_attended": user.get("events_attended")
+        }),200
     except Exception as e:
         print(e)
         return jsonify({"error":"issue with request"}), 400
