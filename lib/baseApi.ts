@@ -4,7 +4,7 @@ import axios from 'axios'
 import type { AxiosRequestConfig, AxiosError } from 'axios'
 import Cookies from 'js-cookie';
 
-const BASE_URL = 'http://127.0.0.1:5328';
+const BASE_URL = '/api';
 
 const axiosBaseQuery =
     (
