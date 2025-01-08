@@ -39,7 +39,6 @@ def login():
     user = DB.users.find_one({
         "email":email,
     })
-    
 
     if user is None:
         # The user was not found on the database
@@ -81,6 +80,7 @@ def users():
 def register():
     try:
         user_info = request.get_json()
+
         enhanced_user_info = {
             "name":user_info['name'],
             "email":user_info["email"],
@@ -98,7 +98,7 @@ def register():
         if user:
             user_id = str(user['_id'])
             logger.info(f"[+] user found {user_id}")
-            return jsonify({"id":user_id}), 200
+            return jsonify({"userId":user_id}), 200
         else:
             logger.error("[!] Error with request")
             return jsonify({"failed","user not created"}), 500
@@ -106,7 +106,7 @@ def register():
         logger.error(e)
         return jsonify({"error":"request failed resend data"}), 400
 
-@app.route('/create-event/', methods=["POST"])
+@app.route('/create-event', methods=["POST"])
 @jwt_required()
 def create_event():
     if request.method == 'POST':

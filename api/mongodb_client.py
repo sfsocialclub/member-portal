@@ -4,7 +4,9 @@ from pymongo.server_api import ServerApi
 # from dotenv import load_dotenv
 import certifi
 import os
+import certifi
 
+load_dotenv()
 client = MongoClient()
 
 """
@@ -13,10 +15,14 @@ client = MongoClient()
 
 """
 
-USERNAME = os.environ["MONGO_USERNAME"]
-PASSWORD = os.environ["MONGO_PASSWORD"]
+USERNAME = os.environ.get("MONGO_USERNAME")
+PASSWORD = os.environ.get("MONGO_PASSWORD")
 URI = f"mongodb+srv://{USERNAME}:{PASSWORD}@cluster1.nfvpz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1"
 
+print(USERNAME, PASSWORD)
+
+if USERNAME is None or PASSWORD is None:
+    raise ValueError("Missing MONGO_USERNAME or MONGO_PASSWORD in environment variables.")
 
 def connector():
     # Create a new client and connect to the server
