@@ -112,20 +112,22 @@ def create_event():
     if request.method == 'POST':
         try:
             event_info = request.get_json()
+            if event_info.get("name",None) is None or event_info.get("host",None) is None or event_info.get("description",None) is None:
+                return jsonify({"error":"missing required feilds"}), 400
             event = {
-                "name": event_info["name"],
-                "host": event_info['host'],
-                "location":event_info['location'],
-                "description": event_info['description'],
-                "partiful_link":event_info["partiful_link"],
-                "event_date":event_info["event_date"],
+                "name": event_info.get("name"),
+                "host": event_info.get('host'),
+                "location":event_info.get('location'),
+                "description": event_info.get('description'),
+                "partiful_link":event_info.get("partiful_link"),
+                "event_date":event_info.get("event_date"),
                 "qr_codes":[],
                 "attended": [],
                 "going": [],
                 "maybes":[],
-                "ics_file": event_info['ics_file'],
-                "is_paid":event_info["is_paid"],
-                "attendance_points": event_info["points"],
+                "ics_file": event_info.get('ics_file'),
+                "is_paid":event_info.get("is_paid"),
+                "attendance_points": event_info.get("points"),
                 "created_at":datetime.datetime.now()
             }
             logger.info(f"[+] current event {event}")
@@ -201,7 +203,9 @@ def update_event(eventID):
         
         event_data = request.get_json()
         event_filter = {"_id": ObjectId(eventID)}
-        update_operation = {"$set": event_data}
+        update_event_data = {**event_data,
+                             "updated_at": datetime.datetime.now()}
+        update_operation = {"$set": update_event_data}
         
         result = DB.events.update_one(event_filter, update_operation)
         
@@ -222,7 +226,9 @@ def update_user(userID):
         
         user_data = request.get_json()
         user_filter = {"_id": ObjectId(userID)}
-        update_operation = {"$set": user_data}
+        updated_user_data = {**user_data,
+                             "updated_at":datetime.datetime.now()}
+        update_operation = {"$set": updated_user_data}
         
         result = DB.users.update_one(user_filter, update_operation)
         
@@ -307,7 +313,7 @@ def permission_to_modify_event(eventID,userID):
         
 def permission_to_modify_user(userID):
         # Admins can delete any user but a user can only delete themselves
-        if session['role'] is not 'admin' or userID is not session['userID']:
+        if session['role'] != 'admin' or userID != session['userID']:
             return False
         else:
             return True
