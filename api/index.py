@@ -125,7 +125,7 @@ def create_event():
                 "maybes":[],
                 "ics_file": event_info['ics_file'],
                 "is_paid":event_info["is_paid"],
-                "participation_points": event_info["points"],
+                "attendance_points": event_info["points"],
                 "created_at":datetime.datetime.now()
             }
             logger.info(f"[+] current event {event}")

@@ -13,6 +13,7 @@ Our backend consists of a flask app, connecting to the front end via a next.js i
             c. only admins can view other users information
             b. password encrypttion works
             e. database security
+            f. encrypt data in transit; plaintext passwords in payload
         4. every user has points
             if you go to event you get a point
             if you dont show up subtract a point
