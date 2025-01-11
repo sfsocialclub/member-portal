@@ -70,7 +70,14 @@ start mongo shell
 * is_paid
 * attendance_points
 
-# API Documentation
+# Testing
+
+```
+pip install -r requirements.txt
+pytest
+```
+
+# API Documentation (coming soon)
 
 | API | Status Codes | Response |
 |----------|----------|----------|
