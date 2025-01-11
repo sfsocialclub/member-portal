@@ -8,7 +8,7 @@ Our backend consists of a flask app, connecting to the front end via a next.js i
         2. finish crud operations - DONE need to test
         2a. test code - In Progress; working on pytests
         3. security checks
-            a. users can't update anyones password but there own - Done
+            a. users can't update anyones password but there own - DONE
             b. only admins or owners of events can delete or update events -DONE
             c. only admins can view other users information - DONE
             b. password encryption works - DONE
