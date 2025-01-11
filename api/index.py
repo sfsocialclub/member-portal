@@ -179,11 +179,15 @@ def user(userid):
         print(e)
         return jsonify({"error":"issue with request"}), 400
 
-@app.route('/events',methods=['GET'])
+@app.route('/events',methods=['GET','POST'])
 @jwt_required()
 def events():
     try:
-        event = DB.events.find({})
+        if request.method == "POST":
+            filter_obj = request.get_json()
+        else:
+            filter_obj = {}
+        event = DB.events.find(filter_obj)
         return jsonify({"data":event}),200
     except Exception as e:
         print(e)
