@@ -1,12 +1,12 @@
 from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import certifi
 import os
 import certifi
 
-load_dotenv()
+# load_dotenv()
 client = MongoClient()
 
 """

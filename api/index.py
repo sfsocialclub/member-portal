@@ -29,28 +29,32 @@ app.config['SECRET_KEY'] = '<repalce with session token from next.js>'
 
 @app.route("/login", methods=['POST'])
 def login():
-    data = request.get_json()
+    try:
+        data = request.get_json()
 
-    email = data['email']
-    password = data['password']
-    # hashpassword
-    password = password.encode("utf-8")
-    
-    user = DB.users.find_one({
-        "email":email,
-    })
+        email = data['email']
+        password = data['password']
+        # hashpassword
+        password = password.encode("utf-8")
+        
+        user = DB.users.find_one({
+            "email":email,
+        })
 
-    if user is None:
-        # The user was not found on the database
-        return jsonify(message="Invalid credentials"), 401
-    if bcrypt.checkpw(password, user['password']):
-        #store userID in current session
-        session['userID'] = str(user['_id'])
-        additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
-        access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
-        return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
-    else:
-        logger.error("[!] Failed credential check")
+        if user is None:
+            # The user was not found on the database
+            return jsonify(message="Invalid credentials"), 401
+        if bcrypt.checkpw(password, user['password']):
+            #store userID in current session
+            session['userID'] = str(user['_id'])
+            additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
+            access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
+            return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
+        else:
+            logger.error("[!] Failed credential check")
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"Missing data"}), 415
 
 # Called on UI page load (e.g. after page refresh)
 # Returns any necessary data stored in jwt
@@ -80,7 +84,9 @@ def users():
 def register():
     try:
         user_info = request.get_json()
-
+        user = DB.users.find_one({"email":user_info['email']}), 400
+        if user:
+            return jsonify({"error":"user has already been created"})
         enhanced_user_info = {
             "name":user_info['name'],
             "email":user_info["email"],
@@ -147,7 +153,7 @@ def create_token():
     password = request.json.get("password", None)
     # Query your database for username and password
     user = DB.users.find_one({"name":username,"password":password})
-    session['role']=user['role']
+    # session['role']=user['role']
     print("user is",user)
     if user is None:
         # The user was not found on the database
