@@ -18,6 +18,7 @@ Our backend consists of a flask app, connecting to the front end via a next.js i
             if you go to event you get a point
             if you dont show up subtract a point
         5. Duplicate handling/prevention
+        6. Add event filter to /create-event - DONE
 ## MongoDB Local setup (Mac)
 
 [installation doc](https://www.mongodb.com/docs/manual/installation/)
