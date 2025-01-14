@@ -31,7 +31,7 @@ app.config['SECRET_KEY'] = '<repalce with session token from next.js>'
 def login():
     try:
         data = request.get_json()
-
+        print("look at data", data)
         email = data['email']
         password = data['password']
         # hashpassword
@@ -40,7 +40,7 @@ def login():
         user = DB.users.find_one({
             "email":email,
         })
-
+        print("user from database", user)
         if user is None:
             # The user was not found on the database
             return jsonify(message="Invalid credentials"), 401
@@ -76,7 +76,8 @@ def users():
     current_role = session.get('role')
     if current_role and current_role == 'admin':
         users = DB.users.find({})
-        return jsonify({"data":users})
+        all_users = modifiy_object_ids(users)
+        return jsonify({"data":all_users})
     return jsonify({"unauthorized":"Only admins and view this data"}), 403
 
 # Creates
@@ -85,7 +86,8 @@ def register():
     try:
         user_info = request.get_json()
         user = DB.users.find_one({"email":user_info['email']}), 400
-        if user:
+        print("found user",user)
+        if user[0] is not None:
             return jsonify({"error":"user has already been created"})
         enhanced_user_info = {
             "name":user_info['name'],
@@ -187,18 +189,33 @@ def events():
             filter_obj = request.get_json()
         else:
             filter_obj = {}
-        event = DB.events.find(filter_obj)
-        return jsonify({"data":event}),200
+        events = DB.events.find(filter_obj)
+        # remove objectId from events
+        all_events = modifiy_object_ids(events)
+        print(all_events)
+        return jsonify({"data":all_events}),200
     except Exception as e:
         print(e)
         return jsonify({"error":"issue with request"}), 400
+
+def modifiy_object_ids(events):
+    all_events = []
+    for event in events:
+        print("current events being modified")
+        modified_event = event
+        modified_event["_id"] = str(modified_event["_id"])
+        all_events.append(modified_event)
+    return all_events
 
 @app.route('/event/<eventID>',methods=['GET'])
 @jwt_required()
 def event(eventID):
     try:
-        event = DB.events.find({"id":eventID})
-        return jsonify({"data":event}),200
+        print("check event id",eventID)
+        event = DB.events.find({"_id":ObjectId(eventID)})
+        print("all events found",event)
+        modified_event = modifiy_object_ids(event)
+        return jsonify({"data":modified_event}),200
     except Exception as e:
         print(e)
         return jsonify({"error":"issue with request"}), 400
