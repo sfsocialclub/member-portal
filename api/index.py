@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
 from bson.objectid import ObjectId
-from mongodb_client import connector
+from api.mongodb_client import connector
 from datetime import timedelta
 import json
 from bson import json_util
