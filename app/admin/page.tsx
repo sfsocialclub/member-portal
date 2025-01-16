@@ -53,11 +53,13 @@ export default function AdminPage() {
             <div className="max-w-md">
                 <QRScanner onScan={handleScan} />
             </div>
-            <div>Scanned:</div>
-            <pre className="whitespace-pre-wrap w-full">{JSON.stringify(lastScannedCodes.map(({rawValue, format}) => ({rawValue, format})), null, 2)}</pre>
-            <div>
-                <div>API Response:</div>
-                <div>{result}</div>
+            <div className="flex items-center flex-col">
+                <div>Scanned:</div>
+                <pre className="whitespace-pre-wrap w-full">{JSON.stringify(lastScannedCodes.map(({rawValue, format}) => ({rawValue, format})), null, 2)}</pre>
+                <div>
+                    <div>API Response:</div>
+                    <div>{result}</div>
+                </div>
             </div>
         </div>
     );
