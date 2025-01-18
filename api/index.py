@@ -27,6 +27,11 @@ app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)    # Refresh token 
 jwt = JWTManager(app)
 app.config['SECRET_KEY'] = '<repalce with session token from next.js>'
 
+# Liveliness check
+@app.route("/ping")
+def ping():
+    return jsonify("pong")
+
 @app.route("/login", methods=['POST'])
 def login():
     data = request.get_json()
@@ -268,5 +273,20 @@ def delete_user(userID):
         print(e)
         return jsonify({"error": "Failed to delete user"}), 500
     
+@app.route('/scan', methods=['post'])
+@jwt_required()
+def scan():
+    jwt_role = get_jwt()['role']
+    if jwt_role != 'admin':
+        return jsonify({"message":"Unauthorized"})
+    try:
+       user_id = request.json.get("userId")
+        # TODO: Look up user and update event attendance
+
+       return jsonify({"message":"Successfully scanned code " + user_id})
+    except Exception as e:
+        print(e)
+        return jsonify({"message":"Code unrecognized"})
+    
 if __name__ == '__main__':
-    app.run(debug=True,port=8000)
+    app.run(debug=True)
