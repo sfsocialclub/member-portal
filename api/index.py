@@ -355,7 +355,7 @@ def permission_to_modify_user(userID):
 def scan():
     jwt_role = get_jwt()['role']
     if jwt_role != 'admin':
-        return jsonify({"message":"Unauthorized"})
+        return jsonify({"message":"Unauthorized"}), 404
     try:
         user_id = request.get_json("userId")
         event_id = request.get_json().get("eventId")
@@ -368,10 +368,10 @@ def scan():
         DB.update_one(event_filter,{
             "$set": update_operation
         })
-        return jsonify({"message":"Successfully scanned code " + user_id})
+        return jsonify({"message":"Successfully scanned code " + user_id}), 200
     except Exception as e:
         print(e)
-        return jsonify({"message":"Code unrecognized"})
+        return jsonify({"message":"Code unrecognized"}), 500
     
 if __name__ == '__main__':
     app.run(debug=True)
