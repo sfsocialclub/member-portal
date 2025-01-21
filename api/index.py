@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
 from bson.objectid import ObjectId
-from mongodb_client import connector
+from api.mongodb_client import connector
 from datetime import timedelta
 import json
 from bson import json_util
@@ -26,6 +26,11 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)  # Access token l
 app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)    # Refresh token lifespan
 jwt = JWTManager(app)
 app.config['SECRET_KEY'] = '<repalce with session token from next.js>'
+
+# Liveliness check
+@app.route("/ping")
+def ping():
+    return jsonify("pong")
 
 @app.route("/login", methods=['POST'])
 def login():
@@ -345,5 +350,28 @@ def permission_to_modify_user(userID):
         else:
             return True
         
+@app.route('/scan', methods=['POST'])
+@jwt_required()
+def scan():
+    jwt_role = get_jwt()['role']
+    if jwt_role != 'admin':
+        return jsonify({"message":"Unauthorized"})
+    try:
+        user_id = request.get_json("userId")
+        event_id = request.get_json().get("eventId")
+        # TODO: Look up user and update event attendance
+        event_filter = {"_id":ObjectId(event_id)}
+        update_operation = {
+                "updated_at": datetime.datetime.now(),
+                "attended": {user_id:True}
+            }
+        DB.update_one(event_filter,{
+            "$set": update_operation
+        })
+        return jsonify({"message":"Successfully scanned code " + user_id})
+    except Exception as e:
+        print(e)
+        return jsonify({"message":"Code unrecognized"})
+    
 if __name__ == '__main__':
-    app.run(debug=True,port=8000)
+    app.run(debug=True)
