@@ -1,19 +1,13 @@
 "use client"
 import { useAppSelector } from "@/lib/hooks";
-import Cookies from "js-cookie";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRouterWithOptimisticPathname } from "../hooks/useOptimisticRouter";
+import { Avatar } from "./Avatar";
 
 export const Navbar = () => {
-  const router = useRouterWithOptimisticPathname();
   const pathname = usePathname();
   const role = useAppSelector(state => state.auth.role)
   const isAdmin = role === 'admin';
-  const handleClick = () => {
-    Cookies.remove('access_token')
-    router.push('/login')
-  }
 
   return (
     <div className="navbar bg-base-100">
@@ -83,21 +77,7 @@ export const Navbar = () => {
         </div>
       </div>
       <div className="flex-none gap-x-8 pr-4">
-        <div className="dropdown dropdown-end">
-          <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
-            <div className="w-10 rounded-full">
-              <img
-                alt="Tailwind CSS Navbar component"
-                src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-            </div>
-          </div>
-          <ul
-            tabIndex={0}
-            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-            <li><a>Settings</a></li>
-            <li><a onClick={handleClick}>Logout</a></li>
-          </ul>
-        </div>
+        <Avatar/>
         <div className="btn btn-primary hidden lg:flex">Go to store</div>
       </div>
     </div>
