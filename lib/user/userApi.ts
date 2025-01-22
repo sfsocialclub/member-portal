@@ -6,9 +6,17 @@ export enum UserRole {
     admin='admin'
 }
 
-type GetUserResponse = {
+export type GetUserResponse = {
     role: UserRole
-    name: string
+    name: string;
+    email: string;
+    points: number;
+    photo: string;
+    // TODO: Replace any with event type
+    events_attended: any[];
+    dateJoined: {
+        $date: string;
+    };
 }
 
 export const userApi = baseApi.injectEndpoints({
