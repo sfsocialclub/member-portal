@@ -43,3 +43,4 @@ env/
 
 .venv
 certificates
+client_secret*
