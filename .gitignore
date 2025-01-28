@@ -43,4 +43,8 @@ env/
 
 .venv
 certificates
+
+# Google Oauth
 client_secret*
+credentials.json
+token.json

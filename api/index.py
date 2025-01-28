@@ -81,7 +81,7 @@ def users():
     current_role = session.get('role')
     if current_role and current_role == 'admin':
         users = DB.users.find({})
-        all_users = modifiy_object_ids(users)
+        all_users = modify_entity_ids(users)
         return jsonify({"data":all_users})
     return jsonify({"unauthorized":"Only admins and view this data"}), 403
 
@@ -196,14 +196,14 @@ def events():
             filter_obj = {}
         events = DB.events.find(filter_obj)
         # remove objectId from events
-        all_events = modifiy_object_ids(events)
+        all_events = modify_entity_ids(events)
         print(all_events)
         return jsonify({"data":all_events}),200
     except Exception as e:
         print(e)
         return jsonify({"error":"issue with request"}), 400
 
-def modifiy_object_ids(events):
+def modify_entity_ids(events):
     all_events = []
     for event in events:
         print("current events being modified")
@@ -219,7 +219,7 @@ def event(eventID):
         print("check event id",eventID)
         event = DB.events.find({"_id":ObjectId(eventID)})
         print("all events found",event)
-        modified_event = modifiy_object_ids(event)
+        modified_event = modify_entity_ids(event)
         return jsonify({"data":modified_event}),200
     except Exception as e:
         print(e)
@@ -359,7 +359,6 @@ def scan():
     try:
         user_id = request.get_json("userId")
         event_id = request.get_json().get("eventId")
-        # TODO: Look up user and update event attendance
         event_filter = {"_id":ObjectId(event_id)}
         update_operation = {
                 "updated_at": datetime.datetime.now(),
