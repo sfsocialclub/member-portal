@@ -22,7 +22,7 @@ def extract_event_data(event_id):
     payload = json.dumps({
     "data": {
         "params": {
-        "eventId": event_id, #" Example ID: 4hISEuaxpg1LL7Wfbluc",
+        "eventId": "4hISEuaxpg1LL7Wfbluc",
         "includeInvitedGuests": True
         },
         "paging": {
@@ -35,3 +35,4 @@ def extract_event_data(event_id):
     response = requests.request("POST", URL, headers=HEADERS, data=payload)
 
     print(response.text)
+extract_event_data("")
