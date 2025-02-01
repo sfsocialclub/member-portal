@@ -78,9 +78,8 @@ pip install -r requirements.txt
 pytest
 ```
 
-# API Documentation (coming soon)
+# Running Google calendar integration
+* From the GCP [console](https://console.cloud.google.com/apis/credentials?project=sf-social-club) download the credentials.json file.
+* save it in the api directory
 
-| API | Status Codes | Response |
-|----------|----------|----------|
-|Register  | 200  | Data 2   |
-| Row 2    | Data 3   | Data 4   |
+# API Documentation (coming soon)

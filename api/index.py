@@ -28,11 +28,11 @@ jwt = JWTManager(app)
 app.config['SECRET_KEY'] = '<repalce with session token from next.js>'
 
 # Liveliness check
-@app.route("/ping")
+@app.route("/api/ping")
 def ping():
     return jsonify("pong")
 
-@app.route("/login", methods=['POST'])
+@app.route("/api/login", methods=['POST'])
 def login():
     try:
         data = request.get_json()
@@ -63,19 +63,19 @@ def login():
 
 # Called on UI page load (e.g. after page refresh)
 # Returns any necessary data stored in jwt
-@app.route("/load", methods = ['GET'])
+@app.route("/api/load", methods = ['GET'])
 @jwt_required()
 def load():
     claims = get_jwt()
     return jsonify(claims)
 
-@app.route('/index')
+@app.route('/api/index')
 @jwt_required()
 def index():
     # Access the identity of the current user with get_jwt_identity
     current_user_id = get_jwt_identity()
     
-@app.route('/users/',methods=['GET'])
+@app.route('/api/users',methods=['GET'])
 @jwt_required()
 def users():
     current_role = session.get('role')
@@ -86,7 +86,7 @@ def users():
     return jsonify({"unauthorized":"Only admins and view this data"}), 403
 
 # Creates
-@app.route("/register", methods=['POST'])
+@app.route("/api/register", methods=['POST'])
 def register():
     try:
         user_info = request.get_json()
@@ -119,7 +119,7 @@ def register():
         logger.error(e)
         return jsonify({"error":"request failed resend data"}), 400
 
-@app.route('/create-event', methods=["POST"])
+@app.route('/api/create-event', methods=["POST"])
 @jwt_required()
 def create_event():
     if request.method == 'POST':
@@ -154,7 +154,7 @@ def create_event():
     else:
         return jsonify({"error":"Most be a post request"}), 400
 
-@app.route('/token', methods=['POST'])
+@app.route('/api/token', methods=['POST'])
 def create_token():
     username = request.json.get("name", None)
     password = request.json.get("password", None)
@@ -171,7 +171,7 @@ def create_token():
     return jsonify({ "token": access_token, "user_id": user['name'] }), 200
 
 # Reads
-@app.route('/user/<userid>',methods=['GET'])
+@app.route('/api/user/<userid>',methods=['GET'])
 @jwt_required()
 def user(userid):
     try:
@@ -186,7 +186,7 @@ def user(userid):
         print(e)
         return jsonify({"error":"issue with request"}), 400
 
-@app.route('/events',methods=['GET','POST'])
+@app.route('/api/events',methods=['GET','POST'])
 @jwt_required()
 def events():
     try:
@@ -212,7 +212,7 @@ def modify_entity_ids(events):
         all_events.append(modified_event)
     return all_events
 
-@app.route('/event/<eventID>',methods=['GET'])
+@app.route('/api/event/<eventID>',methods=['GET'])
 @jwt_required()
 def event(eventID):
     try:
@@ -226,7 +226,7 @@ def event(eventID):
         return jsonify({"error":"issue with request"}), 400
 
 # Updates
-@app.route('/update-event/<eventID>',methods=['PUT'])
+@app.route('/api/update-event/<eventID>',methods=['PUT'])
 @jwt_required()
 def update_event(eventID):
     try:
@@ -249,7 +249,7 @@ def update_event(eventID):
         print(e)
         return jsonify({"error": "Failed to update event"}), 500
 
-@app.route('/update-user/<userID>',methods=['PUT'])
+@app.route('/api/update-user/<userID>',methods=['PUT'])
 @jwt_required()
 def update_user(userID):
     try:
@@ -272,7 +272,7 @@ def update_user(userID):
         print(e)
         return jsonify({"error": "Failed to update user"}), 500
 
-@app.route('/update-password/<userID>',methods=['PUT'])
+@app.route('/api/update-password/<userID>',methods=['PUT'])
 @jwt_required()
 def update_password(userID):
     try: 
@@ -298,7 +298,7 @@ def update_password(userID):
         return jsonify({"error":"Issue with request"}), 400
 
 # Deletes
-@app.route('/delete-event/<eventID>', methods=['DELETE'])
+@app.route('/api/delete-event/<eventID>', methods=['DELETE'])
 @jwt_required()
 def delete_event(eventID):
     try:
@@ -316,7 +316,7 @@ def delete_event(eventID):
         print(e)
         return jsonify({"error": "Failed to delete event"}), 500
 
-@app.route('/delete-user/<userID>', methods=['DELETE'])
+@app.route('/api/delete-user/<userID>', methods=['DELETE'])
 @jwt_required()
 def delete_user(userID):
     try:
@@ -350,7 +350,7 @@ def permission_to_modify_user(userID):
         else:
             return True
         
-@app.route('/scan', methods=['POST'])
+@app.route('/api/scan', methods=['POST'])
 @jwt_required()
 def scan():
     jwt_role = get_jwt()['role']
