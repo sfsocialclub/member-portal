@@ -33,13 +33,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-__pycache__
+
 
 # python virtualenv
 env/
+tests/
 
 # env vars for mongo
 .env
 
 .venv
 certificates
+
+# Google Oauth
+client_secret*
+credentials.json
+token.json

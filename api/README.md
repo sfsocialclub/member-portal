@@ -6,18 +6,20 @@ Our backend consists of a flask app, connecting to the front end via a next.js i
 ## TODO
         1. Fix 415 status code on registration - Fixed: add name field to registration form
         2. finish crud operations - DONE need to test
-        2a. test code
+        2a. test code - In Progress; working on pytests
         3. security checks
-            a. users can't update anyones password but there own
-            b. only admins or owners of events can delete or update events
-            c. only admins can view other users information
-            b. password encrypttion works
+            a. users can't update anyones password but there own - DONE
+            b. only admins or owners of events can delete or update events -DONE
+            c. only admins can view other users information - DONE
+            b. password encryption works - DONE
             e. database security
+            f. encrypt data in transit; plaintext passwords in payload
         4. every user has points
             if you go to event you get a point
             if you dont show up subtract a point
-        5. events add points to events 
-        6. Duplicate handling/prevention
+        5. Duplicate handling/prevention
+        6. Add event filter to /create-event - DONE
+        
 ## MongoDB Local setup (Mac)
 
 [installation doc](https://www.mongodb.com/docs/manual/installation/)
@@ -69,9 +71,15 @@ start mongo shell
 * is_paid
 * attendance_points
 
-# API Documentation
+# Testing
 
-| API | Status Codes | Response |
-|----------|----------|----------|
-|Register  | 200  | Data 2   |
-| Row 2    | Data 3   | Data 4   |
+```
+pip install -r requirements.txt
+pytest
+```
+
+# Running Google calendar integration
+* From the GCP [console](https://console.cloud.google.com/apis/credentials?project=sf-social-club) download the credentials.json file.
+* save it in the api directory
+
+# API Documentation (coming soon)

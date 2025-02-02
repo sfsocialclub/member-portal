@@ -34,26 +34,32 @@ def ping():
 
 @app.route("/api/login", methods=['POST'])
 def login():
-    data = request.get_json()
-
-    email = data['email']
-    password = data['password']
-    # hashpassword
-    password = password.encode("utf-8")
-    
-    user = DB.users.find_one({
-        "email":email,
-    })
-
-    if user is None:
-        # The user was not found on the database
-        return jsonify(message="Invalid credentials"), 401
-    if bcrypt.checkpw(password, user['password']):
-        additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
-        access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
-        return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
-    else:
-        logger.error("[!] Failed credential check")
+    try:
+        data = request.get_json()
+        print("look at data", data)
+        email = data['email']
+        password = data['password']
+        # hashpassword
+        password = password.encode("utf-8")
+        
+        user = DB.users.find_one({
+            "email":email,
+        })
+        print("user from database", user)
+        if user is None:
+            # The user was not found on the database
+            return jsonify(message="Invalid credentials"), 401
+        if bcrypt.checkpw(password, user['password']):
+            #store userID in current session
+            session['userID'] = str(user['_id'])
+            additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
+            access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
+            return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
+        else:
+            logger.error("[!] Failed credential check")
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"Missing data"}), 415
 
 # Called on UI page load (e.g. after page refresh)
 # Returns any necessary data stored in jwt
@@ -69,13 +75,14 @@ def index():
     # Access the identity of the current user with get_jwt_identity
     current_user_id = get_jwt_identity()
     
-@app.route('/api/users/',methods=['GET'])
+@app.route('/api/users',methods=['GET'])
 @jwt_required()
 def users():
     current_role = session.get('role')
     if current_role and current_role == 'admin':
         users = DB.users.find({})
-        return jsonify({"data":users})
+        all_users = modify_entity_ids(users)
+        return jsonify({"data":all_users})
     return jsonify({"unauthorized":"Only admins and view this data"}), 403
 
 # Creates
@@ -83,7 +90,10 @@ def users():
 def register():
     try:
         user_info = request.get_json()
-
+        user = DB.users.find_one({"email":user_info['email']}), 400
+        print("found user",user)
+        if user[0] is not None:
+            return jsonify({"error":"user has already been created"})
         enhanced_user_info = {
             "name":user_info['name'],
             "email":user_info["email"],
@@ -115,16 +125,22 @@ def create_event():
     if request.method == 'POST':
         try:
             event_info = request.get_json()
+            if event_info.get("name",None) is None or event_info.get("host",None) is None or event_info.get("description",None) is None:
+                return jsonify({"error":"missing required feilds"}), 400
             event = {
-                "name": event_info["name"],
-                "host": event_info['host'],
-                "location":event_info['location'],
-                "description": event_info['description'],
-                "partiful_link":event_info["partiful_link"],
-                "event_date":event_info["event_date"],
+                "name": event_info.get("name"),
+                "host": event_info.get('host'),
+                "location":event_info.get('location'),
+                "description": event_info.get('description'),
+                "partiful_link":event_info.get("partiful_link"),
+                "event_date":event_info.get("event_date"),
                 "qr_codes":[],
                 "attended": [],
-                "is_paid":event_info["is_paid"],
+                "going": [],
+                "maybes":[],
+                "ics_file": event_info.get('ics_file'),
+                "is_paid":event_info.get("is_paid"),
+                "attendance_points": event_info.get("points"),
                 "created_at":datetime.datetime.now()
             }
             logger.info(f"[+] current event {event}")
@@ -144,7 +160,7 @@ def create_token():
     password = request.json.get("password", None)
     # Query your database for username and password
     user = DB.users.find_one({"name":username,"password":password})
-    session['role']=user['role']
+    # session['role']=user['role']
     print("user is",user)
     if user is None:
         # The user was not found on the database
@@ -160,27 +176,51 @@ def create_token():
 def user(userid):
     try:
         user = DB.users.find_one({"_id":ObjectId(userid)})
-        return jsonify(parse_json(user)),200
+        return jsonify({
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "points": user.get("points"),
+            "events_attended": user.get("events_attended")
+        }),200
     except Exception as e:
         print(e)
         return jsonify({"error":"issue with request"}), 400
 
-@app.route('/api/events',methods=['GET'])
+@app.route('/api/events',methods=['GET','POST'])
 @jwt_required()
 def events():
     try:
-        event = DB.events.find({})
-        return jsonify({"data":event}),200
+        if request.method == "POST":
+            filter_obj = request.get_json()
+        else:
+            filter_obj = {}
+        events = DB.events.find(filter_obj)
+        # remove objectId from events
+        all_events = modify_entity_ids(events)
+        print(all_events)
+        return jsonify({"data":all_events}),200
     except Exception as e:
         print(e)
         return jsonify({"error":"issue with request"}), 400
+
+def modify_entity_ids(events):
+    all_events = []
+    for event in events:
+        print("current events being modified")
+        modified_event = event
+        modified_event["_id"] = str(modified_event["_id"])
+        all_events.append(modified_event)
+    return all_events
 
 @app.route('/api/event/<eventID>',methods=['GET'])
 @jwt_required()
 def event(eventID):
     try:
-        event = DB.events.find({"id":eventID})
-        return jsonify({"data":event}),200
+        print("check event id",eventID)
+        event = DB.events.find({"_id":ObjectId(eventID)})
+        print("all events found",event)
+        modified_event = modify_entity_ids(event)
+        return jsonify({"data":modified_event}),200
     except Exception as e:
         print(e)
         return jsonify({"error":"issue with request"}), 400
@@ -190,9 +230,14 @@ def event(eventID):
 @jwt_required()
 def update_event(eventID):
     try:
+        if permission_to_modify_event(eventID,session['userID']) is False:
+            return jsonify({"error":"Unauthorized access"}), 403
+        
         event_data = request.get_json()
         event_filter = {"_id": ObjectId(eventID)}
-        update_operation = {"$set": event_data}
+        update_event_data = {**event_data,
+                             "updated_at": datetime.datetime.now()}
+        update_operation = {"$set": update_event_data}
         
         result = DB.events.update_one(event_filter, update_operation)
         
@@ -208,9 +253,14 @@ def update_event(eventID):
 @jwt_required()
 def update_user(userID):
     try:
+        if userID is not session["userID"]:
+            return jsonify({"error":"Unauthorized access"}), 403
+        
         user_data = request.get_json()
         user_filter = {"_id": ObjectId(userID)}
-        update_operation = {"$set": user_data}
+        updated_user_data = {**user_data,
+                             "updated_at":datetime.datetime.now()}
+        update_operation = {"$set": updated_user_data}
         
         result = DB.users.update_one(user_filter, update_operation)
         
@@ -226,18 +276,23 @@ def update_user(userID):
 @jwt_required()
 def update_password(userID):
     try: 
+        if userID != session['userID']:
+            return jsonify({"error":"Unauthorized access"}), 403
         user_info = request.json()
         user_email = user_info.get("email")
         password = user_info.get("password")
         if user_email:
-            encrypted_pass = bcrypt.hashpw(password.encode("utf-8"),bcrypt.gensalt())
-            user_filter = {"email": user_email}
-            new_field = {"$set": {"password": encrypted_pass}}
-            DB.users.update_one(user_filter, new_field)
-            print('updated password successfully')
-            return jsonify({"sucess":f"{user_email} password has been updated"}), 200
+            # user email and userID must match with user from mongo
+            mongo_user = DB.users.find_one({"email":user_email})
+            if userID == str(mongo_user["_id"]) and mongo_user["email"] == user_email:
+                encrypted_pass = bcrypt.hashpw(password.encode("utf-8"),bcrypt.gensalt())
+                user_filter = {"email": user_email}
+                new_field = {"$set": {"password": encrypted_pass}}
+                DB.users.update_one(user_filter, new_field)
+                print('updated password successfully')
+                return jsonify({"sucess":f"{user_email} password has been updated"}), 200
         else:
-            return jsonify({"error":"User email was not in request"}), 400
+            return jsonify({"error":"User email was not in request, or invalid"}), 400
     except Exception as e:
         print(e)
         return jsonify({"error":"Issue with request"}), 400
@@ -247,6 +302,9 @@ def update_password(userID):
 @jwt_required()
 def delete_event(eventID):
     try:
+        if permission_to_modify_event(eventID,session['userID']) is False:
+            return jsonify({"error":"Unauthorized access"}), 403
+        
         event_filter = {"_id": ObjectId(eventID)}
         result = DB.events.delete_one(event_filter)
         
@@ -262,6 +320,9 @@ def delete_event(eventID):
 @jwt_required()
 def delete_user(userID):
     try:
+        if permission_to_modify_user(userID) is False:
+            return jsonify({"error":"Unauthorized access"}), 403
+        
         user_filter = {"_id": ObjectId(userID)}
         result = DB.users.delete_one(user_filter)
         
@@ -273,20 +334,43 @@ def delete_user(userID):
         print(e)
         return jsonify({"error": "Failed to delete user"}), 500
     
-@app.route('/api/scan', methods=['post'])
+def permission_to_modify_event(eventID,userID):
+         # Only admins and the host of the event can remove the event
+        event = DB.events.find_one({"_id":ObjectId(eventID)})
+        current_user = DB.users.find_one({"_id":userID})
+        if event['host'] != current_user["email"] or current_user['role'] != 'admin':
+            return False
+        else:
+            return True
+        
+def permission_to_modify_user(userID):
+        # Admins can delete any user but a user can only delete themselves
+        if session['role'] != 'admin' or userID != session['userID']:
+            return False
+        else:
+            return True
+        
+@app.route('/api/scan', methods=['POST'])
 @jwt_required()
 def scan():
     jwt_role = get_jwt()['role']
     if jwt_role != 'admin':
-        return jsonify({"message":"Unauthorized"})
+        return jsonify({"message":"Unauthorized"}), 404
     try:
-       user_id = request.json.get("userId")
-        # TODO: Look up user and update event attendance
-
-       return jsonify({"message":"Successfully scanned code " + user_id})
+        user_id = request.get_json("userId")
+        event_id = request.get_json().get("eventId")
+        event_filter = {"_id":ObjectId(event_id)}
+        update_operation = {
+                "updated_at": datetime.datetime.now(),
+                "attended": {user_id:True}
+            }
+        DB.update_one(event_filter,{
+            "$set": update_operation
+        })
+        return jsonify({"message":"Successfully scanned code " + user_id}), 200
     except Exception as e:
         print(e)
-        return jsonify({"message":"Code unrecognized"})
+        return jsonify({"message":"Code unrecognized"}), 500
     
 if __name__ == '__main__':
     app.run(debug=True)
