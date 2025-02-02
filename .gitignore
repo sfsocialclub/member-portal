@@ -37,6 +37,7 @@ next-env.d.ts
 
 # python virtualenv
 env/
+tests/
 
 # env vars for mongo
 .env
