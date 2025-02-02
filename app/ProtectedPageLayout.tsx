@@ -1,4 +1,4 @@
-import { Navbar } from "./components/NavLinks";
+import { Navbar } from "./components/Navbar/Navbar";
 import { useRouterWithOptimisticPathname } from "./hooks/useOptimisticRouter";
 
 export const ProtectedPageLayout = ({
