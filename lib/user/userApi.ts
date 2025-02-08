@@ -14,9 +14,7 @@ export type GetUserResponse = {
     photo: string;
     // TODO: Replace any with event type
     events_attended: any[];
-    dateJoined: {
-        $date: string;
-    };
+    dateJoined: string;
 }
 
 export const userApi = baseApi.injectEndpoints({

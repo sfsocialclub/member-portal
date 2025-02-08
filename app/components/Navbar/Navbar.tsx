@@ -10,7 +10,7 @@ export const Navbar = () => {
   const isAdmin = role === 'admin';
 
   return (
-    <div className="navbar bg-base-100">
+    <div className="navbar bg-white">
       <div className="navbar-start flex-1">
         <div className="dropdown z-10">
           <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">

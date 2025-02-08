@@ -180,7 +180,8 @@ def user(userid):
             "name": user.get("name"),
             "email": user.get("email"),
             "points": user.get("points"),
-            "events_attended": user.get("events_attended")
+            "events_attended": user.get("events_attended"),
+            "dateJoined": user.get("dateJoined")
         }),200
     except Exception as e:
         print(e)

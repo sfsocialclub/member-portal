@@ -10,8 +10,9 @@ export const Avatar = () => {
   const userId = useAppSelector((state) => state.auth.userId);
   const { data: apiData } = userApi.useGetUserQuery(userId!, { skip: !userId });
 
-  const handleLogoutClick = () => {
-    Cookies.remove("access_token");
+  // TODO: Need UX
+    const handleLogoutClick = () => {
+        Cookies.remove("access_token");
     router.push("/login");
   };
 
@@ -30,7 +31,7 @@ export const Avatar = () => {
       </div>
       <ul
         tabIndex={0}
-        className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+        className="menu menu-sm dropdown-content bg-white rounded-box z-[1] mt-3 w-52 p-2 shadow"
       >
         <li>
           <Link href="/profile">Profile</Link>

@@ -43,6 +43,12 @@ module.exports = {
     require('daisyui'),
   ],
   daisyui: {
-    themes: ["light", "dark"],
+    themes: [
+      {
+        sfsocialclub: {
+          "base-100":"#F6F3EE"
+        }
+      }
+    ],
   },
 }
