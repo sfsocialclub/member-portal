@@ -49,3 +49,4 @@ certificates
 client_secret*
 credentials.json
 token.json
+*storybook.log

@@ -8,7 +8,9 @@
     "dev": "concurrently \"pnpm run next-dev\" \"pnpm run flask-dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -35,11 +37,29 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
-    "@types/js-cookie": "^3.0.6"
+    "@chromatic-com/storybook": "^3.2.4",
+    "@storybook/addon-essentials": "^8.5.4",
+    "@storybook/addon-interactions": "^8.5.4",
+    "@storybook/addon-onboarding": "^8.5.4",
+    "@storybook/blocks": "^8.5.4",
+    "@storybook/jest": "^0.2.3",
+    "@storybook/nextjs": "^8.5.4",
+    "@storybook/react": "^8.5.4",
+    "@storybook/test": "^8.5.4",
+    "@storybook/testing-library": "^0.2.2",
+    "@types/js-cookie": "^3.0.6",
+    "eslint-plugin-storybook": "^0.11.2",
+    "msw": "^2.7.0",
+    "storybook": "^8.5.4"
   },
   "engines": {
     "node": ">=22",
     "pnpm": ">=9"
   },
-  "packageManager": "pnpm@9.15.2"
+  "packageManager": "pnpm@9.15.2",
+  "eslintConfig": {
+    "extends": [
+      "plugin:storybook/recommended"
+    ]
+  }
 }
