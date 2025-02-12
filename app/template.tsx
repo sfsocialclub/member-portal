@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { authApi } from "../lib/auth/authApi";
 import { authSlice } from "../lib/auth/authSlice";
 import { useRouterWithOptimisticPathname } from "./hooks/useOptimisticRouter";
+import LoadingPage from "./components/loadingPage";
 
 export default function ProtectedRouteProvider({
   children,
