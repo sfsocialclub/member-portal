@@ -6,7 +6,6 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useEffect, useState } from "react";
 import { authApi } from "../lib/auth/authApi";
 import { authSlice } from "../lib/auth/authSlice";
-import LoadingPage from "./components/loadingPage";
 import { useRouterWithOptimisticPathname } from "./hooks/useOptimisticRouter";
 
 export default function ProtectedRouteProvider({
