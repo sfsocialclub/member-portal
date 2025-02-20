@@ -10,7 +10,7 @@ export const ProtectedPageLayout = ({
   return (
     <div className="flex flex-col w-full h-full items-center justify-center">
       {!isPublicRoute && <Navbar />}
-      <div className="flex flex-col w-full h-full max-w-[1280px] grid place-items-center">
+      <div className="flex flex-col w-full h-full max-w-[1280px] place-items-center p-6">
         {children}
       </div>
     </div>

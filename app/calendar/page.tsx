@@ -66,7 +66,7 @@ export default function CalendarPage() {
 
   if(isFetching) { return null }
 
-  return <div className="flex items-center h-full p-6 flex-col gap-y-4 w-full">
+  return <div className="flex items-center h-full flex-col gap-y-4 w-full">
       <ViewPicker activeLayout={activeLayout} setActiveLayout={setActiveLayout}/>
       {activeLayout === CalendarLayout.calendar ? (
         <>
@@ -83,6 +83,5 @@ export default function CalendarPage() {
           })}
         </>
       )}
-
   </div>;
 }

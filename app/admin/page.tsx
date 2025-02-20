@@ -3,6 +3,7 @@ import { IDetectedBarcode, IScannerProps } from "@yudiel/react-qr-scanner";
 import { QRScanner } from "./components/QRScanner";
 import { useState } from "react";
 import { useScanMutation } from "@/lib/scanner/scannerApi";
+import { useGetEventsQuery } from "@/lib/eventsApi";
 
 /**
  * Renders proof of concept QR Scanner to send decrypted value to backend
@@ -12,7 +13,9 @@ import { useScanMutation } from "@/lib/scanner/scannerApi";
  */
 export default function AdminPage() {
     const [lastScannedCodes, setLastScannedCodes] = useState<IDetectedBarcode[]>([]);
-    const [result, setResult] = useState<string|null>(null);
+    const [result, setResult] = useState<string | null>(null);
+    const [selectedEventId, setSelectedEventId] = useState<string>('');
+    const { data: events, isFetching: isEventsFetching } = useGetEventsQuery();
     const [scan] = useScanMutation();
 
     /**
@@ -27,12 +30,12 @@ export default function AdminPage() {
         setResult(null);
         setLastScannedCodes(detectedCodes);
         const lastDetectedCode = [...detectedCodes].pop()
-        if(lastDetectedCode) {
+        if (lastDetectedCode) {
             try {
                 const rawValueAsJson = JSON.parse(lastDetectedCode?.rawValue)
-                if('userId' in rawValueAsJson) {
-                    scan({ userId: rawValueAsJson.userId }).then(({data}) => {
-                        if(data) {
+                if ('userId' in rawValueAsJson) {
+                    scan({ userId: rawValueAsJson.userId, eventId: selectedEventId }).then(({ data }) => {
+                        if (data) {
                             setResult(data.message)
                         }
                     })
@@ -41,26 +44,38 @@ export default function AdminPage() {
                 }
             } catch (error) {
                 console.error(error)
-                if(error instanceof SyntaxError) {
+                if (error instanceof SyntaxError) {
                     setResult(error.message)
                 }
             }
-            
+
         }
     }
     return (
-        <div className="flex items-center flex-col gap-8 max-w-md">
-            <div className="max-w-md">
-                <QRScanner onScan={handleScan} />
-            </div>
-            <div className="flex items-center flex-col">
-                <div>Scanned:</div>
-                <pre className="whitespace-pre-wrap w-full">{JSON.stringify(lastScannedCodes.map(({rawValue, format}) => ({rawValue, format})), null, 2)}</pre>
-                <div>
-                    <div>API Response:</div>
-                    <div>{result}</div>
-                </div>
-            </div>
+        <div className="flex flex-col gap-8 max-w-md w-full">
+            <select defaultValue="Select an event" className="select w-full" onChange={(e) => setSelectedEventId(e.target.value)}>
+                <option key={'default'} disabled={true} value="Select an event">Select an event</option>
+                {events?.map((event) => (
+                    <option key={event.id} value={event.id}>{event.name}</option>
+                ))}
+            </select>
+            {
+                !!selectedEventId && (
+                    <>
+                        <div className="max-w-md">
+                            <QRScanner onScan={handleScan} />
+                        </div>
+                        <div className="flex items-center flex-col">
+                            <div>Scanned:</div>
+                            <pre className="whitespace-pre-wrap w-full">{JSON.stringify(lastScannedCodes.map(({ rawValue, format }) => ({ rawValue, format })), null, 2)}</pre>
+                            <div>
+                                <div>API Response:</div>
+                                <div>{result}</div>
+                            </div>
+                        </div>
+                    </>
+                )
+            }
         </div>
     );
 }

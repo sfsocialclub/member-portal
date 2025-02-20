@@ -6,6 +6,7 @@ interface ScanResponse {
 
 interface ScanParameters {
     userId: string;
+    eventId: string;
 }
 
 export const scannerApi = baseApi.injectEndpoints({

@@ -286,19 +286,20 @@ def events():
         # remove objectId from events
         all_events = modify_entity_ids(events)
         print(all_events)
-        return jsonify({"data":all_events}),200
+        return jsonify(all_events),200
     except Exception as e:
         print(e)
         return jsonify({"error":"issue with request"}), 400
 
-def modify_entity_ids(events):
-    all_events = []
-    for event in events:
-        print("current events being modified")
-        modified_event = event
-        modified_event["_id"] = str(modified_event["_id"])
-        all_events.append(modified_event)
-    return all_events
+def modify_entity_ids(entities):
+    all_entities = []
+    for entity in entities:
+        print("current entities being modified")
+        modified_entity = entity
+        modified_entity = {key: value for key, value in entity.items() if key != "_id"}
+        modified_entity["id"] = str(entity["_id"])
+        all_entities.append(modified_entity)
+    return all_entities
 
 @app.route('/api/event/<eventID>',methods=['GET'])
 @jwt_required()
