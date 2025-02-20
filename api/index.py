@@ -176,11 +176,99 @@ def create_token():
 def user(userid):
     try:
         user = DB.users.find_one({"_id":ObjectId(userid)})
+
+        class RsvpStatus:
+            attended = 'attended'
+            maybe = 'maybe'
+            no = 'no'
+
+        MOCK_EVENTS = [
+            {
+                "id": "event-0",
+                "name": "Rooftop Party",
+                "startDateTime": "2025-02-14T02:00:00.000Z",
+                "endDateTime": "2025-02-14T02:00:00.000Z",
+                "description": "A rooftop soirée under the stars with live music and signature cocktails.",
+                "points": 100,
+                "location": {
+                    "name": "The Rooftop",
+                    "address": "123 Main St, San Francisco, CA 94105"
+                },
+                "status": RsvpStatus.attended
+            },
+            {
+                "id": "event-1a",
+                "name": "Jazz Bar",
+                "startDateTime": "2025-02-18T02:00:00.000Z",
+                "endDateTime": "2025-02-18T02:00:00.000Z",
+                "description": "An underground speakeasy night featuring jazz, craft cocktails, and hidden surprises.",
+                "points": 150,
+                "location": {
+                    "name": "The Jazz Club",
+                    "address": "456 Broadway, New York, NY 10013"
+                },
+                "status": RsvpStatus.maybe
+            },
+            {
+                "id": "event-1b",
+                "name": "Pickle Ball",
+                "startDateTime": "2025-02-18T01:00:00.000Z",
+                "endDateTime": "2025-02-18T01:00:00.000Z",
+                "description": "Meet at the courts, make progress to your game, vibe with the crew.",
+                "points": 200,
+                "location": {
+                    "name": "The Pickle Ball Court",
+                    "address": "789 Oak St, Los Angeles, CA 90012"
+                },
+                "status": RsvpStatus.no
+            },
+            {
+                "id": "event-2",
+                "name": "Cosplay Con",
+                "startDateTime": "2025-02-21T02:00:00.000Z",
+                "endDateTime": "2025-02-21T02:00:00.000Z",
+                "description": "A themed costume party with a DJ, dance floor, and interactive photo booths.",
+                "points": 250,
+                "location": {
+                    "name": "The Convention Center",
+                    "address": "901 Market St, San Francisco, CA 94105"
+                },
+                "status": RsvpStatus.attended
+            },
+            {
+                "id": "event-3",
+                "name": "Beach Visit",
+                "startDateTime": "2025-02-27T02:00:00.000Z",
+                "endDateTime": "2025-02-27T02:00:00.000Z",
+                "description": "A sunset beach bonfire with s’mores, acoustic live performances, and ocean waves.",
+                "points": 300,
+                "location": {
+                    "name": "The Beach",
+                    "address": "123 Beach St, Miami, FL 33139"
+                },
+                "status": RsvpStatus.maybe
+            }
+        ]
+
         return jsonify({
             "name": user.get("name"),
             "email": user.get("email"),
             "points": user.get("points"),
-            "events_attended": user.get("events_attended")
+            # TODO: Retrieve events RSVP by given user
+            #       id: string;
+            #       startDateTime: string;
+            #       endDateTime: string;
+            #       name: string;
+            #       description: string;
+            #       points: number;
+            #       location: {
+            #           name: string;
+            #           address: string;
+            #       }
+            #       status: RsvpStatus;
+            "events": MOCK_EVENTS,
+            "events_attended": user.get("events_attended"),
+            "dateJoined": user.get("dateJoined")
         }),200
     except Exception as e:
         print(e)

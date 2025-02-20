@@ -8,9 +8,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="light" className="font-morandi">
-      <body className="bg-base-200 h-screen w-full">
-          <main className="h-screen w-full">
+    <html lang="en" data-theme="sfsocialclub" className="font-morandi">
+      <body className="bg-base-100 w-full h-screen">
+          <main className="h-full w-full pt-[64px]">
             <Providers><ProtectedRouteProvider>{children}</ProtectedRouteProvider></Providers>
           </main>
       </body>

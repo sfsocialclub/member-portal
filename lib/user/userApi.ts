@@ -1,4 +1,5 @@
 'use client';
+import { UserCalendarEvent } from "@/app/calendar/models";
 import { baseApi } from "@/lib/baseApi";
 
 export enum UserRole {
@@ -12,11 +13,8 @@ export type GetUserResponse = {
     email: string;
     points: number;
     photo: string;
-    // TODO: Replace any with event type
-    events_attended: any[];
-    dateJoined: {
-        $date: string;
-    };
+    events: UserCalendarEvent[];
+    dateJoined: string;
 }
 
 export const userApi = baseApi.injectEndpoints({
