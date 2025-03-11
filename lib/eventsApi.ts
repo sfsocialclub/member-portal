@@ -4,7 +4,7 @@ import { baseApi } from "./baseApi";
 type EventsResponse = CalendarEvent[]
 
 interface EventsParameters {
-    startDateTime?: string;
+    today?: boolean;
 }
 
 export const eventsApi = baseApi.injectEndpoints({
@@ -12,8 +12,8 @@ export const eventsApi = baseApi.injectEndpoints({
         getEvents: builder.query<EventsResponse, EventsParameters | void>({
             query: (params) => ({
                 url: "/events",
-                method: params ? "POST" : "GET",
-                data: params
+                // method: params ? "POST" : "GET",
+                params
             }),
         }),
     }),

@@ -30,7 +30,17 @@ def connector():
     try:
         client.admin.command('ping')
         print("Pinged your deployment. You successfully connected to MongoDB!")
-        return client.db
+
+        db = client.db
+
+        # Ensure unique index on event_id + user_id
+        db.code_scans.create_index(
+            [("event_id", 1), ("user_id", 1)], 
+            unique=True
+        )
+        print("Index on event_id and user_id created (if not exists).")
+
+        return db
     except Exception as e:
         print(e)
         return None

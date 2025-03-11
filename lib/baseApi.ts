@@ -53,3 +53,4 @@ export const baseApi = createApi({
     }),
     endpoints: () => ({}),
 })
+.enhanceEndpoints({ addTagTypes: ['AttendedEvents'] })

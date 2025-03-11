@@ -4,12 +4,14 @@ from flask_jwt_extended import JWTManager
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
 from bson.objectid import ObjectId
 from api.mongodb_client import connector
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+from pymongo.errors import DuplicateKeyError
+import traceback
 import json
 from bson import json_util
 import logging
 import bcrypt
-import datetime
+from pymongo import ReturnDocument
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +38,6 @@ def ping():
 def login():
     try:
         data = request.get_json()
-        print("look at data", data)
         email = data['email']
         password = data['password']
         # hashpassword
@@ -58,7 +59,7 @@ def login():
         else:
             logger.error("[!] Failed credential check")
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return jsonify({"error":"Missing data"}), 415
 
 # Called on UI page load (e.g. after page refresh)
@@ -103,7 +104,7 @@ def register():
             "events_attended": [],
             "events_created": [],
             "events_missed": [],
-            "created_at": datetime.datetime.now()
+            "created_at": datetime.now()
             }
         print(f"[+] user info: {enhanced_user_info}")
         DB.users.insert_one(enhanced_user_info)
@@ -141,7 +142,7 @@ def create_event():
                 "ics_file": event_info.get('ics_file'),
                 "is_paid":event_info.get("is_paid"),
                 "attendance_points": event_info.get("points"),
-                "created_at":datetime.datetime.now()
+                "created_at":datetime.now()
             }
             logger.info(f"[+] current event {event}")
             DB.events.insert_one(event)
@@ -149,7 +150,7 @@ def create_event():
             event_data['_id'] = str(event_data['_id'])  # Convert ObjectId to string
             return jsonify({"id": event_data['_id']}), 200
         except Exception as e:
-            print(e)
+            traceback.print_exc()
             return jsonify({"error":"Failed to send data"}), 400
     else:
         return jsonify({"error":"Most be a post request"}), 400
@@ -177,102 +178,48 @@ def user(userid):
     try:
         user = DB.users.find_one({"_id":ObjectId(userid)})
 
-        class RsvpStatus:
-            attended = 'attended'
-            maybe = 'maybe'
-            no = 'no'
+        event_rsvps = list(DB.event_rsvps.find({"user_id":ObjectId(userid)}, {"_id": 0, "event_id": 1, "status": 1}))
+        scanned_events = set(doc["event_id"] for doc in DB.code_scans.find({"user_id":ObjectId(userid)}, {"_id": 0, "event_id": 1}))
 
-        MOCK_EVENTS = [
-            {
-                "id": "event-0",
-                "name": "Rooftop Party",
-                "startDateTime": "2025-02-14T02:00:00.000Z",
-                "endDateTime": "2025-02-14T02:00:00.000Z",
-                "description": "A rooftop soirée under the stars with live music and signature cocktails.",
-                "points": 100,
-                "location": {
-                    "name": "The Rooftop",
-                    "address": "123 Main St, San Francisco, CA 94105"
-                },
-                "status": RsvpStatus.attended
-            },
-            {
-                "id": "event-1a",
-                "name": "Jazz Bar",
-                "startDateTime": "2025-02-18T02:00:00.000Z",
-                "endDateTime": "2025-02-18T02:00:00.000Z",
-                "description": "An underground speakeasy night featuring jazz, craft cocktails, and hidden surprises.",
-                "points": 150,
-                "location": {
-                    "name": "The Jazz Club",
-                    "address": "456 Broadway, New York, NY 10013"
-                },
-                "status": RsvpStatus.maybe
-            },
-            {
-                "id": "event-1b",
-                "name": "Pickle Ball",
-                "startDateTime": "2025-02-18T01:00:00.000Z",
-                "endDateTime": "2025-02-18T01:00:00.000Z",
-                "description": "Meet at the courts, make progress to your game, vibe with the crew.",
-                "points": 200,
-                "location": {
-                    "name": "The Pickle Ball Court",
-                    "address": "789 Oak St, Los Angeles, CA 90012"
-                },
-                "status": RsvpStatus.no
-            },
-            {
-                "id": "event-2",
-                "name": "Cosplay Con",
-                "startDateTime": "2025-02-21T02:00:00.000Z",
-                "endDateTime": "2025-02-21T02:00:00.000Z",
-                "description": "A themed costume party with a DJ, dance floor, and interactive photo booths.",
-                "points": 250,
-                "location": {
-                    "name": "The Convention Center",
-                    "address": "901 Market St, San Francisco, CA 94105"
-                },
-                "status": RsvpStatus.attended
-            },
-            {
-                "id": "event-3",
-                "name": "Beach Visit",
-                "startDateTime": "2025-02-27T02:00:00.000Z",
-                "endDateTime": "2025-02-27T02:00:00.000Z",
-                "description": "A sunset beach bonfire with s’mores, acoustic live performances, and ocean waves.",
-                "points": 300,
-                "location": {
-                    "name": "The Beach",
-                    "address": "123 Beach St, Miami, FL 33139"
-                },
-                "status": RsvpStatus.maybe
+        # Combine event IDs from both RSVP and scanned events (no duplicates)
+        event_ids = set(rsvp["event_id"] for rsvp in event_rsvps) | scanned_events #set(str(scan["event_id"]) for scan in scanned_events)
+
+        event_details = {str(event["_id"]): event for event in DB.events.find({"_id": {"$in": list(event_ids)}})}
+
+        events = []
+        for event_id in event_ids:
+            event_id_str = str(event_id)
+            event_info = event_details.get(event_id_str, {})
+
+            # Get RSVP status for this event (if the user RSVP'd)
+            rsvp_status = next((rsvp["status"] for rsvp in event_rsvps if str(rsvp["event_id"]) == event_id_str), None)
+
+            # Check if the user scanned for this event
+            scanned = event_id in scanned_events
+
+            event = {
+                "id": event_id_str,
+                "name": event_info.get("name", ""),
+                "description": event_info.get("description", ""),
+                "startDateTime": event_info.get("startDateTime") if event_info.get("startDateTime") else None,
+                "location": event_info.get("location", None),
+                "status": rsvp_status,
+                "scanned": scanned
             }
-        ]
+
+            events.append(event)
 
         return jsonify({
             "name": user.get("name"),
             "email": user.get("email"),
             "points": user.get("points"),
-            # TODO: Retrieve events RSVP by given user
-            #       id: string;
-            #       startDateTime: string;
-            #       endDateTime: string;
-            #       name: string;
-            #       description: string;
-            #       points: number;
-            #       location: {
-            #           name: string;
-            #           address: string;
-            #       }
-            #       status: RsvpStatus;
-            "events": MOCK_EVENTS,
-            "events_attended": user.get("events_attended"),
+            "events": events,
             "dateJoined": user.get("dateJoined")
-        }),200
+        }), 200
+    
     except Exception as e:
-        print(e)
-        return jsonify({"error":"issue with request"}), 400
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/events',methods=['GET','POST'])
 @jwt_required()
@@ -281,14 +228,21 @@ def events():
         if request.method == "POST":
             filter_obj = request.get_json()
         else:
-            filter_obj = {}
+            if(request.args.get('today') == 'true'):
+                date_param = datetime.now()
+                start_date = date_param - timedelta(hours=24)
+                end_date = date_param + timedelta(hours=24)
+                filter_obj = {"startDateTime": {"$gte": start_date, "$lte": end_date}}
+            else:
+                filter_obj = {}
+        print('filter_obj:',filter_obj)
         events = DB.events.find(filter_obj)
         # remove objectId from events
         all_events = modify_entity_ids(events)
         print(all_events)
         return jsonify(all_events),200
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return jsonify({"error":"issue with request"}), 400
 
 def modify_entity_ids(entities):
@@ -311,7 +265,7 @@ def event(eventID):
         modified_event = modify_entity_ids(event)
         return jsonify({"data":modified_event}),200
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return jsonify({"error":"issue with request"}), 400
 
 # Updates
@@ -325,7 +279,7 @@ def update_event(eventID):
         event_data = request.get_json()
         event_filter = {"_id": ObjectId(eventID)}
         update_event_data = {**event_data,
-                             "updated_at": datetime.datetime.now()}
+                             "updated_at": datetime.now()}
         update_operation = {"$set": update_event_data}
         
         result = DB.events.update_one(event_filter, update_operation)
@@ -335,7 +289,7 @@ def update_event(eventID):
         else:
             return jsonify({"error": "Event not found"}), 404
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return jsonify({"error": "Failed to update event"}), 500
 
 @app.route('/api/update-user/<userID>',methods=['PUT'])
@@ -348,7 +302,7 @@ def update_user(userID):
         user_data = request.get_json()
         user_filter = {"_id": ObjectId(userID)}
         updated_user_data = {**user_data,
-                             "updated_at":datetime.datetime.now()}
+                             "updated_at":datetime.now()}
         update_operation = {"$set": updated_user_data}
         
         result = DB.users.update_one(user_filter, update_operation)
@@ -358,7 +312,7 @@ def update_user(userID):
         else:
             return jsonify({"error": "User not found"}), 404
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return jsonify({"error": "Failed to update user"}), 500
 
 @app.route('/api/update-password/<userID>',methods=['PUT'])
@@ -383,7 +337,7 @@ def update_password(userID):
         else:
             return jsonify({"error":"User email was not in request, or invalid"}), 400
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return jsonify({"error":"Issue with request"}), 400
 
 # Deletes
@@ -402,7 +356,7 @@ def delete_event(eventID):
         else:
             return jsonify({"error": "Event not found"}), 404
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return jsonify({"error": "Failed to delete event"}), 500
 
 @app.route('/api/delete-user/<userID>', methods=['DELETE'])
@@ -420,7 +374,7 @@ def delete_user(userID):
         else:
             return jsonify({"error": "User not found"}), 404
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         return jsonify({"error": "Failed to delete user"}), 500
     
 def permission_to_modify_event(eventID,userID):
@@ -446,20 +400,98 @@ def scan():
     if jwt_role != 'admin':
         return jsonify({"message":"Unauthorized"}), 404
     try:
-        user_id = request.get_json("userId")
+        user_id = request.get_json().get("userId")
         event_id = request.get_json().get("eventId")
-        event_filter = {"_id":ObjectId(event_id)}
-        update_operation = {
-                "updated_at": datetime.datetime.now(),
-                "attended": {user_id:True}
-            }
-        DB.update_one(event_filter,{
-            "$set": update_operation
-        })
-        return jsonify({"message":"Successfully scanned code " + user_id}), 200
+        scan_time = datetime.now()
+
+        if not user_id or not event_id:
+            return jsonify({"error":"Missing user id or event id"}), 400
+        
+        scan_doc = {
+            "event_id":ObjectId(event_id),
+            "user_id":ObjectId(user_id),
+            "scan_time":scan_time
+        }
+
+        try:
+            DB.code_scans.insert_one(scan_doc)
+            return jsonify({"message": "Scan recorded successfully"}), 201
+        except DuplicateKeyError:
+            return jsonify({"error": "User has already scanned for this event"}), 409
+        except Exception as e:
+            return jsonify({"error": "Unable to create scan record", "details": str(e)}), 500
+
     except Exception as e:
-        print(e)
-        return jsonify({"message":"Code unrecognized"}), 500
+        traceback.print_exc()
+        return jsonify({"message":"Unable to create scan record"}), 500
+
+# Example usage  
+# curl -X POST https://127.0.0.1:5328/rsvp -H "Content-Type: application/json" -d '{"status": "maybe", "user_id": "your_user_id", "event_id": "your_event_id"}' 
+@app.route('/rsvp', methods=['POST'])
+def create_or_update_rsvp():
+    try:
+        # Get the status from the request payload
+        data = request.get_json()
+        status = data.get("status", "yes")  # Default to "yes" if status is not provided
+        user_id = data.get("user_id")
+        event_id = data.get("event_id")
+
+        if not user_id or not event_id:
+            return jsonify({"error": "Missing user ID or event ID"}), 400
+
+        # Find the existing RSVP for the user and event
+        existing_rsvp = DB.event_rsvps.find_one({"user_id": ObjectId(user_id), "event_id": ObjectId(event_id)})
+
+        if existing_rsvp:
+            # If RSVP exists, update the status
+            updated_rsvp = DB.event_rsvps.find_one_and_update(
+                {"user_id": ObjectId(user_id), "event_id": ObjectId(event_id)},
+                {"$set": {"status": status}},
+                return_document=ReturnDocument.AFTER  # Return the updated document
+            )
+            print("updated_rsvp",updated_rsvp)
+            updated_rsvp["_id"] = str(updated_rsvp["_id"])
+            updated_rsvp["user_id"] = str(updated_rsvp["user_id"])
+            updated_rsvp["event_id"] = str(updated_rsvp["event_id"])
+            return jsonify({"message": "RSVP updated successfully", "updated_rsvp": updated_rsvp}), 200
+        else:
+            # If no existing RSVP, create a new one
+            new_rsvp = {
+                "user_id": ObjectId(user_id),
+                "event_id": ObjectId(event_id),
+                "status": status
+            }
+            result = DB.event_rsvps.insert_one(new_rsvp)
+            return jsonify({"message": "RSVP created successfully", "event_rsvp_id": str(result.inserted_id)}), 201
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    
+# Endpoint to delete an event_rsvp document
+# curl -X DELETE https://127.0.0.1:5328/rsvp -H "Content-Type: application/json" -d '{"user_id": "your_user_id", "event_id": "your_event_id"}'
+@app.route('/rsvp', methods=['DELETE'])
+def delete_rsvp():
+    try:
+        # Get the user ID and event ID from the request payload
+        data = request.get_json()
+        user_id = data.get("user_id")
+        event_id = data.get("event_id")
+
+        if not user_id or not event_id:
+            return jsonify({"error": "Missing user ID or event ID"}), 400
+        
+        # Delete the event_rsvp document with the constant user and event
+        result = DB.event_rsvps.delete_one({"user_id": ObjectId(user_id), "event_id": ObjectId(event_id)})
+
+        if result.deleted_count == 1:
+            return jsonify({"message": "RSVP deleted successfully"}), 200
+        else:
+            return jsonify({"message": "No matching RSVP found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
     
 if __name__ == '__main__':
     app.run(debug=True)

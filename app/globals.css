@@ -35,4 +35,8 @@
     --depth: 1;
     --noise: 0;
   }
+
+.rdp-month_caption {
+  display: none
+}
   

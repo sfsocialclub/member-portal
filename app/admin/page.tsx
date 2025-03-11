@@ -15,7 +15,7 @@ export default function AdminPage() {
     const [lastScannedCodes, setLastScannedCodes] = useState<IDetectedBarcode[]>([]);
     const [result, setResult] = useState<string | null>(null);
     const [selectedEventId, setSelectedEventId] = useState<string>('');
-    const { data: events, isFetching: isEventsFetching } = useGetEventsQuery();
+    const { data: events, isFetching: isEventsFetching } = useGetEventsQuery({ today: true });
     const [scan] = useScanMutation();
 
     /**
@@ -53,12 +53,21 @@ export default function AdminPage() {
     }
     return (
         <div className="flex flex-col gap-8 max-w-md w-full">
-            <select defaultValue="Select an event" className="select w-full" onChange={(e) => setSelectedEventId(e.target.value)}>
-                <option key={'default'} disabled={true} value="Select an event">Select an event</option>
-                {events?.map((event) => (
-                    <option key={event.id} value={event.id}>{event.name}</option>
-                ))}
-            </select>
+            <div className="flex flex-col gap-2 w-full">
+                <p>Select an event to scan for:</p>
+                <select defaultValue="default" className="select w-full" onChange={(e) => setSelectedEventId(e.target.value)}>
+                    <option key={'default'} disabled={true} value="default">Not Selected</option>
+                    {events?.map((event) => (
+                        <option key={event.id} value={event.id}>{new Date(event.startDateTime).toLocaleTimeString("en-US", {
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        }).toLowerCase()} {event.name} - {event.location.name}</option>
+                    ))}
+                </select>
+            </div>
             {
                 !!selectedEventId && (
                     <>
