@@ -5,11 +5,11 @@ export type CalendarEvent = {
     endDateTime: string;
     name: string;
     description: string;
-    points: number;
     location: {
         name: string;
         address: string;
     };
+    scanned: boolean;
 };
 
 export interface UserCalendarEvent extends CalendarEvent {
@@ -17,7 +17,7 @@ export interface UserCalendarEvent extends CalendarEvent {
 }
 
 export enum RsvpStatus {
-    attended = 'attended',
+    yes = 'yes',
     maybe = 'maybe',
     no = 'no'
 }

@@ -17,12 +17,14 @@ export type GetUserResponse = {
     dateJoined: string;
 }
 
-export const userApi = baseApi.injectEndpoints({
+export const userApi = baseApi
+    .injectEndpoints({
     endpoints: (builder) => ({
         getUser: builder.query<GetUserResponse, string>({
             query: (id) => ({
                 url: `/user/${id}`,
-            })
+            }),
+            providesTags: ['AttendedEvents']
         })
     }),
     overrideExisting: false

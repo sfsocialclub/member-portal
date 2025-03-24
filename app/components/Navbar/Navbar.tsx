@@ -68,9 +68,9 @@ export const Navbar = () => {
           <Link className={`${pathname === '/calendar' ? 'font-bold link-primary' : ''}`} href="/calendar">
             Calendar
           </Link>
-          <Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
+          {/* <Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
             Point shop
-          </Link>
+          </Link> */}
           {
             isAdmin && (
               <Link
@@ -83,7 +83,7 @@ export const Navbar = () => {
           }
         </div>
       </div>
-      <div className="flex-none gap-x-8 pr-4">
+      <div className="flex flex-none gap-x-8 pr-4">
         <Avatar/>
         <div className="btn btn-primary hidden lg:flex">Go to store</div>
       </div>

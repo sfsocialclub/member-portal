@@ -14,7 +14,7 @@ const EventDetails = ({ event }: EventRowProps) => {
     const timeOfDay = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).toLowerCase().replace(" ", "");
 
     const badgeClass = {
-        "attended": "badge-outline badge-success",
+        "yes": "badge-outline badge-success",
         "maybe": "badge-soft badge-neutral",
         "no": "badge-outline badge-error"
     }
@@ -25,9 +25,9 @@ const EventDetails = ({ event }: EventRowProps) => {
                 <div className="flex flex-col">
                     <div className="flex gap-x-2 items-center">
                         <h5 className="font-bold text-lg">{event.name}</h5>
-                        <div className={`capitalize text-xs badge px-2 rounded-xl min-w-4 ${badgeClass[event.status]}`}>{event.status}</div>
+                        <div className={`capitalize text-xs badge px-2 rounded-xl min-w-4 ${event.scanned ? "badge-outline badge-success" : badgeClass[event.status]}`}>{event.scanned ? "Attended" : event.status}</div>
                     </div>
-                    <div className="text-sm">{timeOfDay} @ {event.location.name} • {`${event.points}pts`}</div>
+                    <div className="text-sm">{timeOfDay} @ {event.location.name}</div> {/**• {`${event.points}pts`}</div> */} 
                 </div>
                 <p className="text-xs">{event.description}</p>
             </div>
@@ -41,10 +41,14 @@ export const DayOfEventsList = ({ day, events }: DayOfEventsListProps) => {
     const dayOfWeek = day?.toLocaleDateString("en-US", { weekday: "long" })
 
     return (
-        <div className="bg-white rounded-[20px]">
-            {(!day || events.length === 0) ? (
+        <div className="bg-white rounded-[20px] w-full">
+            {(!day) ? (
                 <p className="p-10 font-bold text-center text-2xl">Select an event date in the calendar to see details</p>
-            ) : (
+            ) 
+            : (events.length === 0) ? (
+                <p className="p-10 font-bold text-center text-2xl">No events for {day.toLocaleDateString("en-US", { day: "numeric", month: "long" })}</p>
+            )
+            : (
                 <div className="p-4">
                     <div className="font-bold text-xs mb-8">{dayOfWeek}, {month} {dayOfMonth}</div>
                     <div className="flex flex-col gap-y-6">
