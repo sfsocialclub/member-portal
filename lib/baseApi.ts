@@ -21,8 +21,6 @@ const axiosBaseQuery =
         unknown
     > =>
         async ({ url, method, data, params, headers }) => {
-            const token = Cookies.get('access_token');
-
             try {
                 const result = await axios({
                     url: baseUrl + url,
@@ -31,7 +29,7 @@ const axiosBaseQuery =
                     params,
                     headers: {
                         ...headers,
-                        ...token && { authorization: `Bearer ${token}` }
+                        'X-CSRF-TOKEN': Cookies.get('csrf_access_token')
                     },
                 })
                 return { data: result.data }

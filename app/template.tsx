@@ -1,7 +1,5 @@
 "use client";
 
-import Cookies from "js-cookie";
-
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useEffect, useState } from "react";
 import { authApi } from "../lib/auth/authApi";
@@ -24,18 +22,7 @@ export default function ProtectedRouteProvider({
 
   useEffect(() => {
     const checkAuth = async () => {
-      // 1. Obtain the session from the cookie
-      const accessToken = Cookies.get("access_token");
-
-      // 2. Redirect to /login if the user is not authenticated
-      if (!accessToken) {
-        setLoading(false);
-        if (["/login", "/signup"].includes(pathname)) return;
-        if (pathname !== "/login") router.push("/login");
-        return;
-      }
-
-      // 3. Get session on page load
+      // 1. Get session on page load
       if (!role) {
         setLoading(true);
         load()
@@ -43,25 +30,24 @@ export default function ProtectedRouteProvider({
             if (data) {
               dispatch(authSlice.actions.setRole(data.role));
               dispatch(authSlice.actions.setUserId(data.userId));
+              setLoading(false);
             } else if (error) {
               throw error;
             }
           })
           .catch((err) => {
-            Cookies.remove("access_token");
             router.push("/login");
           });
       } else {
         setLoading(false);
 
-        // 4. Redirect admin route attempt for a non-admin user to /member
+        // 2. Redirect admin route attempt for a non-admin user to /member
         if (isAdminRoute && role !== "admin") {
-          console.log();
           router.push("/member");
           return;
         }
 
-        // 5. Redirect public routes to role route if the user is authenticated
+        // 3. Redirect public routes to role route if the user is authenticated
         if (isPublicRoute) {
           router.push("/home");
         }
