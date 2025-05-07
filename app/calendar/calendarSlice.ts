@@ -12,8 +12,8 @@ interface CalendarState {
 const initialState: CalendarState = {
   selectedDate: undefined,
   activeLayout: CalendarLayout.calendar,
-  year: 2025,
-  month: 2,
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(), 
 };
 
 const calendarSlice = createSlice({

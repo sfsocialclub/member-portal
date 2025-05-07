@@ -423,7 +423,7 @@ def scan():
 
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"message":"Unable to create scan record"}), 500
+        return jsonify({"error":"Unable to create scan record"}), 500
 
 # Example usage  
 # curl -X POST https://127.0.0.1:5328/rsvp -H "Content-Type: application/json" -d '{"status": "maybe", "user_id": "your_user_id", "event_id": "your_event_id"}' 
