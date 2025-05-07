@@ -1,19 +1,21 @@
-import { useRouterWithOptimisticPathname } from "@/app/hooks/useOptimisticRouter";
-import Cookies from "js-cookie";
-import Link from "next/link";
-import { UserIcon } from "@heroicons/react/24/outline";
+import { useLogoutMutation } from "@/lib/auth/authApi";
+import { authSlice } from "@/lib/auth/authSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { userApi } from "@/lib/user/userApi";
-import { useAppSelector } from "@/lib/hooks";
+import { UserIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
 
 export const Avatar = () => {
-  const router = useRouterWithOptimisticPathname();
+  const dispatch = useAppDispatch();
   const userId = useAppSelector((state) => state.auth.userId);
   const { data: apiData } = userApi.useGetUserQuery(userId!, { skip: !userId });
+  const [logout] = useLogoutMutation();
 
-  // TODO: Need UX
     const handleLogoutClick = () => {
-        Cookies.remove("access_token");
-    router.push("/login");
+    logout().then(()=> {
+      dispatch(authSlice.actions.setRole(undefined));
+      dispatch(authSlice.actions.setUserId(undefined));
+    });
   };
 
   return (

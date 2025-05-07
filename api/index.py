@@ -1,18 +1,30 @@
 from flask import Flask, session,request,jsonify
 from flask_cors import CORS
+
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import set_access_cookies
+from flask_jwt_extended import unset_jwt_cookies
+
 from bson.objectid import ObjectId
 from api.mongodb_client import connector
-from datetime import datetime, timedelta, timezone
+
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+
 from pymongo.errors import DuplicateKeyError
 import traceback
 import json
 from bson import json_util
-import logging
 import bcrypt
 from pymongo import ReturnDocument
 
+import logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def parse_json(data):
@@ -23,11 +35,34 @@ DB = connector()
 CORS(app, support_credentials=True)
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # For testing locally
 # Setup the Flask-JWT-Extended extension
+
+# If true this will only allow the cookies that contain your JWTs to be sent
+# over https. In production, this should always be set to True
+app.config["JWT_COOKIE_SECURE"] = False
+app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this "super secret" to something else!
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=15)  # Access token lifespan
-app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)    # Refresh token lifespan
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # Access token lifespan
 jwt = JWTManager(app)
 app.config['SECRET_KEY'] = '<repalce with session token from next.js>'
+@app.after_request
+def refresh_expiring_jwts(response):
+    try:
+        exp_timestamp = get_jwt()["exp"]
+        now = datetime.now(timezone.utc)
+        target_timestamp = datetime.timestamp(now + timedelta(minutes=30))
+        if target_timestamp > exp_timestamp:
+            claims = get_jwt()  # contains your additional_claims
+            
+            # Remove JWT reserved claims like exp, iat, jti, etc.
+            reserved_keys = {"exp", "iat", "jti", "nbf", "sub", "fresh", "type"}
+            additional_claims = {k: v for k, v in claims.items() if k not in reserved_keys}
+
+            access_token = create_access_token(identity=get_jwt_identity(), additional_claims=additional_claims)
+            set_access_cookies(response, access_token)
+        return response
+    except (RuntimeError, KeyError):
+        # Case where there is not a valid JWT. Just return the original response
+        return response
 
 # Liveliness check
 @app.route("/api/ping")
@@ -55,12 +90,20 @@ def login():
             session['userID'] = str(user['_id'])
             additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
             access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
-            return jsonify(access_token=access_token, role=user['role'], userId=str(user['_id'])), 200
+            response = jsonify(role=user['role'], userId=str(user['_id']))
+            set_access_cookies(response, access_token)
+            return response, 200
         else:
             logger.error("[!] Failed credential check")
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error":"Missing data"}), 415
+    
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    response = jsonify({"msg": "logout successful"})
+    unset_jwt_cookies(response)
+    return response
 
 # Called on UI page load (e.g. after page refresh)
 # Returns any necessary data stored in jwt
@@ -69,12 +112,6 @@ def login():
 def load():
     claims = get_jwt()
     return jsonify(claims)
-
-@app.route('/api/index')
-@jwt_required()
-def index():
-    # Access the identity of the current user with get_jwt_identity
-    current_user_id = get_jwt_identity()
     
 @app.route('/api/users',methods=['GET'])
 @jwt_required()
@@ -154,22 +191,6 @@ def create_event():
             return jsonify({"error":"Failed to send data"}), 400
     else:
         return jsonify({"error":"Most be a post request"}), 400
-
-@app.route('/api/token', methods=['POST'])
-def create_token():
-    username = request.json.get("name", None)
-    password = request.json.get("password", None)
-    # Query your database for username and password
-    user = DB.users.find_one({"name":username,"password":password})
-    # session['role']=user['role']
-    print("user is",user)
-    if user is None:
-        # The user was not found on the database
-        return jsonify({"msg": "Bad username or password"}), 401
-
-    # Create a new token with the user id inside
-    access_token = create_access_token(identity=user['name'])
-    return jsonify({ "token": access_token, "user_id": user['name'] }), 200
 
 # Reads
 @app.route('/api/user/<userid>',methods=['GET'])
@@ -491,7 +512,6 @@ def delete_rsvp():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
     
 if __name__ == '__main__':
     app.run(debug=True)

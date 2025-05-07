@@ -18,8 +18,7 @@ export default function LoginPage() {
 
     login({ email, password })
       .then(({ data, error }) => {
-        if (data?.access_token) {
-          Cookies.set('access_token', data.access_token)
+        if (data) {
           dispatch(authSlice.actions.setRole(data.role));
           dispatch(authSlice.actions.setUserId(data.userId))
 
