@@ -43,14 +43,14 @@ export const DayOfEventsList = ({ day, events }: DayOfEventsListProps) => {
     return (
         <div className="bg-white rounded-[20px] w-full">
             {(!day) ? (
-                <p className="p-10 font-bold text-center text-2xl">Select an event date in the calendar to see details</p>
+                <p className="p-10 font-bold text-center text-xl text-primary">Select an event date in the calendar to see details</p>
             ) 
             : (events.length === 0) ? (
-                <p className="p-10 font-bold text-center text-2xl">No events for {day.toLocaleDateString("en-US", { day: "numeric", month: "long" })}</p>
+                <p className="p-10 font-extrabold text-center text-xl text-primary">No events for {day.toLocaleDateString("en-US", { day: "numeric", month: "long" })}!</p>
             )
             : (
                 <div className="p-4">
-                    <div className="font-bold text-xs mb-8">{dayOfWeek}, {month} {dayOfMonth}</div>
+                    <div className="font-bold text-xs mb-2 text-primary">{dayOfWeek}, {month} {dayOfMonth}</div>
                     <div className="flex flex-col gap-y-6">
                         {events.map((event) => (
                             <EventDetails key={event.id} event={event} />

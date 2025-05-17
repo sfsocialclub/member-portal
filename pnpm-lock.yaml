@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/dm-sans':
+        specifier: ^5.2.5
+        version: 5.2.5
+      '@fontsource/red-hat-display':
+        specifier: ^5.2.5
+        version: 5.2.5
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@18.2.0)
@@ -63,8 +69,8 @@ importers:
         specifier: 18.2.0
         version: 18.2.0
       react-day-picker:
-        specifier: ^9.5.0
-        version: 9.5.1(react@18.2.0)
+        specifier: ^9.6.7
+        version: 9.6.7(react@18.2.0)
       react-dom:
         specifier: 18.2.0
         version: 18.2.0(react@18.2.0)
@@ -880,6 +886,12 @@ packages:
   '@eslint/js@8.40.0':
     resolution: {integrity: sha512-ElyB54bJIhXQYVKjDSvCkPO1iU1tSAeVQJbllWJq1XQSmmA4dgFk8CbiBGpiOPxleE48vDogxCtmMYku4HSVLA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
+  '@fontsource/dm-sans@5.2.5':
+    resolution: {integrity: sha512-P+RiK+bvyvBqfUZjFqhntCFvKlrH1rm42ME7wpYXwFpmpr9jWD/FP6vnp0iCbP3cYeqDyML1KcwIspiHy1rHmA==}
+
+  '@fontsource/red-hat-display@5.2.5':
+    resolution: {integrity: sha512-2/fWJPkT4YyWNp0Q5gJwcemlWJryq2Lco0XZ/htYzOcci7zw3tXVLw+tbq2CLddE1/lTlhTpcCfPopcYnAaO2Q==}
 
   '@heroicons/react@2.2.0':
     resolution: {integrity: sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==}
@@ -3754,8 +3766,8 @@ packages:
     peerDependencies:
       react: ^16.3.0 || ^17.0.1 || ^18.0.0 || ^19.0.0
 
-  react-day-picker@9.5.1:
-    resolution: {integrity: sha512-PxuK8inYLlYgM2zZUVBPsaBM5jI40suPeG+naKyx7kpyF032RRlEAUEjkpW9/poTASh/vyWAOVqjGuGw+47isw==}
+  react-day-picker@9.6.7:
+    resolution: {integrity: sha512-rCSt6X8FXQWpjykns/azRXjJk3cMSzkzGbDEXuEveFGNZgOjZULdJQ5wsu8Zfyo8ZgPBoYCBKQ5wRrgJfhJGbg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: '>=16.8.0'
@@ -5409,6 +5421,10 @@ snapshots:
       - supports-color
 
   '@eslint/js@8.40.0': {}
+
+  '@fontsource/dm-sans@5.2.5': {}
+
+  '@fontsource/red-hat-display@5.2.5': {}
 
   '@heroicons/react@2.2.0(react@18.2.0)':
     dependencies:
@@ -8729,7 +8745,7 @@ snapshots:
       react: 18.2.0
       tween-functions: 1.2.0
 
-  react-day-picker@9.5.1(react@18.2.0):
+  react-day-picker@9.6.7(react@18.2.0):
     dependencies:
       '@date-fns/tz': 1.2.0
       date-fns: 4.1.0

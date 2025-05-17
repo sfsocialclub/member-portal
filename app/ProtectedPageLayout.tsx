@@ -8,7 +8,7 @@ export const ProtectedPageLayout = ({
 }) => {
   const { isPublicRoute } = useRouterWithOptimisticPathname();
   return (
-    <div className="flex flex-col w-full h-full items-center justify-center">
+    <div className={`flex flex-col w-full h-full items-center justify-center ${!isPublicRoute && "pt-[64px]"}`}>
       {!isPublicRoute && <Navbar />}
       <div className="flex flex-col w-full h-full max-w-[1280px] place-items-center p-6">
         {children}

@@ -40,7 +40,7 @@ export const ListLayout = () => {
             {
                 eventsThisMonth.length === 0 ? (
                     <div className="bg-white rounded-[20px] w-full">
-                        <p className="p-10 font-bold text-center text-2xl">No events found for {new Date(year, month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
+                        <p className="p-10 font-bold text-center text-xl text-primary">No events found for {new Date(year, month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
                     </div>
                 ) : (
                     eventsThisMonth.map((eventsOnDay) => {

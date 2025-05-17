@@ -29,7 +29,7 @@ export default function LoginPage() {
     signup({ name,email, password })
       .then(({ data, error }) => {
         if (data?.userId) {
-alert("User created successfully!");
+          alert("User created successfully!");
           router.push("/login");
         } else if (error) { throw error;
         }
