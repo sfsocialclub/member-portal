@@ -36,7 +36,7 @@ export const Navbar = () => {
           </div>
           <ul
             tabIndex={0}
-            className="menu menu-sm dropdown-content bg-white rounded-box z-1 mt-3 w-52 p-2 shadow">
+            className="menu menu-sm dropdown-content bg-white rounded-lg z-1 mt-3 w-52 p-2 shadow">
             <li onClick={handleMenuItemClick}><Link  className={`${pathname === '/home' ? 'font-bold link-primary' : ''}`} href="/home">
               Home
             </Link></li>
@@ -59,7 +59,7 @@ export const Navbar = () => {
           </ul>
         </div>
         <div className="shrink-0 flex justify-center lg:w-80">
-          <Link className="btn btn-ghost text-xl" href="/home">SF Social Club</Link>
+          <Link className="text-xl uppercase font-bold font-[Red_Hat_Display]" href="/home">SF Social Club</Link>
         </div>
         <div className="gap-x-4 lg:flex hidden">
           <Link className={`${pathname === '/home' ? 'font-bold link-primary' : ''}`} href="/home">

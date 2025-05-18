@@ -27,6 +27,7 @@ export function useRouterWithOptimisticPathname() {
     // handles initial load edge case
     optimisticPath: optimisticPath.length === 0 ? pathname : optimisticPath,
     push,
+    replace: router.replace,
     isPublicRoute,
   };
 }

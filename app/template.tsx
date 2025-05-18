@@ -19,25 +19,32 @@ export default function ProtectedRouteProvider({
   const router = useRouterWithOptimisticPathname();
   const { optimisticPath: pathname, isPublicRoute } = router;
   const isAdminRoute = pathname === "/admin";
+  const isRootPath = pathname === "/"
 
   useEffect(() => {
     const checkAuth = async () => {
       // 1. Get session on page load
       if (!role) {
         setLoading(true);
-        load()
-          .then(({ data, error }) => {
-            if (data) {
-              dispatch(authSlice.actions.setRole(data.role));
-              dispatch(authSlice.actions.setUserId(data.userId));
-              setLoading(false);
-            } else if (error) {
-              throw error;
-            }
-          })
-          .catch((err) => {
-            router.push("/login");
-          });
+        if(!isPublicRoute) {
+          load()
+            .then(({ data, error }) => {
+              if (data) {
+                dispatch(authSlice.actions.setRole(data.role));
+                dispatch(authSlice.actions.setUserId(data.userId));
+                setLoading(false);
+              } else if (error) {
+                throw error;
+              }
+            })
+            .catch((err) => {
+              router.push("/login");
+            });
+        } else {
+          if(isRootPath) {
+            router.replace("/login");
+          }
+        }
       } else {
         setLoading(false);
 

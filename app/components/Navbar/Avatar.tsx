@@ -4,9 +4,11 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { userApi } from "@/lib/user/userApi";
 import { UserIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export const Avatar = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const userId = useAppSelector((state) => state.auth.userId);
   const { data: apiData } = userApi.useGetUserQuery(userId!, { skip: !userId });
   const [logout] = useLogoutMutation();
@@ -15,7 +17,7 @@ export const Avatar = () => {
     logout().then(()=> {
       dispatch(authSlice.actions.setRole(undefined));
       dispatch(authSlice.actions.setUserId(undefined));
-    });
+    }).then(()=>window.location.reload());
   };
 
   return (
@@ -33,7 +35,7 @@ export const Avatar = () => {
       </div>
       <ul
         tabIndex={0}
-        className="menu menu-sm dropdown-content bg-white rounded-box z-[1] mt-3 w-52 p-2 shadow"
+        className="menu menu-sm dropdown-content bg-white rounded-xl z-[1] mt-3 w-52 p-2 shadow"
       >
         <li>
           <Link href="/profile">Profile</Link>

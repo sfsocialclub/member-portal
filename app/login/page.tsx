@@ -5,6 +5,7 @@ import { useState } from "react";
 import { authApi } from "../../lib/auth/authApi";
 import { authSlice } from "../../lib/auth/authSlice";
 import { useRouterWithOptimisticPathname } from "../hooks/useOptimisticRouter";
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouterWithOptimisticPathname();
@@ -39,18 +40,19 @@ export default function LoginPage() {
 
   return (
     <div className="h-full w-full flex items-center justify-center">
-      <div className="flex flex-col gap-4 w-full max-w-2xl">
-        <div className="w-full max-w-2xl bg-base-100 flex flex-col p-8 rounded-2xl">
-          <div className="w-full h-32 flex items-center justify-center">
-            <p className="text-4xl text-base-content">
-              Welcome to SF Social Club!
+      <div className="flex flex-col gap-4 w-full max-w-md">
+        <Image className={'mx-auto'} src="/logo.png" alt={'SF Social Club'} width={150} height={150}/>
+        <div className="w-full max-w-2xl bg-base-100 flex flex-col p-6 rounded-2xl">
+          <div className="w-full flex items-center justify-center">
+            <p className="text-4xl my-6 font-[Red_Hat_Display] font-extrabold text-accent">
+              SF SOCIAL CLUB
             </p>
           </div>
-          <form className="w-full flex flex-col gap-6" onSubmit={handleSubmit}>
+          <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="w-full flex flex-col gap-2">
-              <p className="text-3xl font-semibold text-base-content">Log in</p>
+              <p className="text-xl font-semibold text-base-content font-[Red_Hat_Display]">Log In</p>
               <p className="text-base text-base-content">
-                Enter your email and we'll send you a login code
+                Enter your login credentials
               </p>
             </div>
             <input
