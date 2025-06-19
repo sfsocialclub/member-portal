@@ -1,13 +1,12 @@
 "use client"
-import { useAppSelector } from "@/lib/hooks";
+import { useAppSession } from "@/lib/hooks";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "./Avatar";
 
 export const Navbar = () => {
+  const session = useAppSession();
   const pathname = usePathname();
-  const role = useAppSelector(state => state.auth.role)
-  const isAdmin = role === 'admin';
 
   const handleMenuItemClick = () =>{
       const elem: HTMLElement = document.activeElement as HTMLElement;
@@ -43,11 +42,14 @@ export const Navbar = () => {
             <li onClick={handleMenuItemClick}><Link className={`${pathname === '/calendar' ? 'font-bold link-primary' : ''}`} href="/calendar">
               Calendar
             </Link></li>
+            <li onClick={handleMenuItemClick}><Link className={`${pathname === '/eventHost' ? 'font-bold link-primary' : ''}`} href="/eventHost">
+              Event Host
+            </Link></li>
             <li onClick={handleMenuItemClick}><Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
               Point shop
             </Link></li>
             {
-              isAdmin && (
+              session.user.isAdmin && (
                 <li onClick={handleMenuItemClick}><Link
                   className={`${pathname === '/admin' ? 'font-bold link-primary' : ''}`}
                   href="/admin"
@@ -71,8 +73,11 @@ export const Navbar = () => {
           {/* <Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
             Point shop
           </Link> */}
+          <Link className={`${pathname === '/eventHost' ? 'font-bold link-primary' : ''}`} href="/eventHost">
+            Event Host
+          </Link>
           {
-            isAdmin && (
+            session.user.isAdmin && (
               <Link
                 className={`${pathname === '/admin' ? 'font-bold link-primary' : ''}`}
                 href="/admin"

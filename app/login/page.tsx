@@ -1,88 +1,49 @@
 "use client"
-import { useAppDispatch } from "@/lib/hooks";
-import Cookies from 'js-cookie';
-import { useState } from "react";
-import { authApi } from "../../lib/auth/authApi";
-import { authSlice } from "../../lib/auth/authSlice";
-import { useRouterWithOptimisticPathname } from "../hooks/useOptimisticRouter";
-import Image from 'next/image'
+import { useAppSession } from "@/lib/hooks";
+import { getProviders, signIn } from "next-auth/react";
+import Image from 'next/image';
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
-  const router = useRouterWithOptimisticPathname();
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>("");
-  const [login] = authApi.useLoginMutation();
-  const dispatch = useAppDispatch();
+  const [providers, setProviders] = useState<Awaited<ReturnType<typeof getProviders>>>(null);
+  const session = useAppSession();
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault()
+  // const { data: userInfo, isLoading: userInfoLoading } = useGetSlackUserInfoQuery();
 
-    login({ email, password })
-      .then(({ data, error }) => {
-        if (data) {
-          dispatch(authSlice.actions.setRole(data.role));
-          dispatch(authSlice.actions.setUserId(data.userId))
-
-          router.push('/')
-        } else if (error) { throw error }
-      }).catch((error) => {
-        console.log(error)
-        // TODO: Handle error state UI
-      })
-  }
-
-  const handleSignupNavigation = (
-    event: React.MouseEvent<HTMLAnchorElement>
-  ) => {
-    event.preventDefault();
-    router.push("/signup");
-  };
+  useEffect(() => {
+    getProviders().then((providers) => {
+      setProviders(providers)
+    });
+  }, []);
 
   return (
     <div className="h-full w-full flex items-center justify-center">
       <div className="flex flex-col gap-4 w-full max-w-md">
-        <Image className={'mx-auto'} src="/logo.png" alt={'SF Social Club'} width={150} height={150}/>
+        <Image className={'mx-auto'} src="/logo.png" alt={'SF Social Club'} width={150} height={150} />
         <div className="w-full max-w-2xl bg-base-100 flex flex-col p-6 rounded-2xl">
           <div className="w-full flex items-center justify-center">
             <p className="text-4xl my-6 font-[Red_Hat_Display] font-extrabold text-accent">
               SF SOCIAL CLUB
             </p>
           </div>
-          <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
-            <div className="w-full flex flex-col gap-2">
-              <p className="text-xl font-semibold text-base-content font-[Red_Hat_Display]">Log In</p>
-              <p className="text-base text-base-content">
-                Enter your login credentials
-              </p>
-            </div>
-            <input
-              type="email"
-              placeholder="email"
-              className="input input-bordered w-full"
-              required={true}
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
-            />
-            <input
-              type="password"
-              placeholder="password"
-              className="input input-bordered w-full"
-              required={true}
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-            />
-            <button className="btn" type="submit">
-              Continue
-            </button>
-          </form>
+          <div className="flex justify-center">
+            {
+              providers && Object.values(providers).map((provider) => {
+                if (provider.name.toLowerCase() === 'slack') {
+                  return (
+                    <div key={provider.name}>
+                      <button onClick={() => signIn(provider.id)} className="btn bg-[#622069] text-white border-[#591660]">
+                        <svg aria-label="Slack logo" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g strokeLinecap="round" strokeWidth="78"><path stroke="#36c5f0" d="m110 207h97m0-97h.1v-.1"></path><path stroke="#2eb67d" d="m305 110v97m97 0v.1h.1"></path><path stroke="#ecb22e" d="m402 305h-97m0 97h-.1v.1"></path><path stroke="#e01e5a" d="M110 305h.1v.1m97 0v97"></path></g></svg>
+                        Login with Slack
+                      </button>
+                    </div>
+                  )
+                } else return null
+              })
+            }
+          </div>
         </div>
-        <p className="ml-1 text-base-content">
-          Don't have an account?{" "}
-          <a onClick={handleSignupNavigation} className="link">
-            Sign up
-          </a>
-        </p>
       </div>
-    </div>
+    </div >
   );
 }

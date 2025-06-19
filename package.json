@@ -3,22 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "flask-dev": "python3 -m venv .venv && source .venv/bin/activate && FLASK_DEBUG=1 pip3 install -r api/requirements.txt && python3 -m flask --app api/index run -p 5328 --host=0.0.0.0 --cert=certificates/localhost.pem --key=certificates/localhost-key.pem",
+    "flask-dev": "python3 -m venv .venv && source .venv/bin/activate && FLASK_DEBUG=1 pip3 install -r flaskApi/requirements.txt && python3 -m flask --app flaskApi/index run -p 5328 --host=0.0.0.0 --cert=certificates/localhost.pem --key=certificates/localhost-key.pem",
     "next-dev": "next dev --experimental-https",
     "dev": "concurrently \"pnpm run next-dev\" \"pnpm run flask-dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "lint": "next lint"
   },
   "dependencies": {
+    "@auth/mongodb-adapter": "^3.9.1",
     "@fontsource/dm-sans": "^5.2.5",
     "@fontsource/red-hat-display": "^5.2.5",
     "@heroicons/react": "^2.2.0",
     "@reduxjs/toolkit": "^2.5.0",
+    "@slack/web-api": "^7.9.2",
     "@tailwindcss/postcss": "^4.0.4",
     "@tailwindcss/typography": "^0.5.15",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "20.1.4",
     "@types/react": "18.3.18",
     "@types/react-dom": "18.2.4",
@@ -29,7 +30,10 @@
     "eslint": "8.40.0",
     "eslint-config-next": "13.4.2",
     "js-cookie": "^3.0.5",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.16.0",
     "next": "15.1.4",
+    "next-auth": "^4.24.11",
     "postcss": "8.4.23",
     "qrcode.react": "^4.2.0",
     "react": "18.2.0",
@@ -40,30 +44,13 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^3.2.4",
-    "@storybook/addon-essentials": "^8.5.4",
-    "@storybook/addon-interactions": "^8.5.4",
-    "@storybook/addon-onboarding": "^8.5.4",
-    "@storybook/blocks": "^8.5.4",
-    "@storybook/jest": "^0.2.3",
-    "@storybook/nextjs": "^8.5.4",
-    "@storybook/react": "^8.5.4",
-    "@storybook/test": "^8.5.4",
-    "@storybook/testing-library": "^0.2.2",
     "@types/js-cookie": "^3.0.6",
-    "daisyui": "5.0.27",
-    "eslint-plugin-storybook": "^0.11.2",
-    "msw": "^2.7.0",
-    "storybook": "^8.5.4"
+    "daisyui": "5.0.43",
+    "msw": "^2.7.0"
   },
   "engines": {
     "node": ">=22",
     "pnpm": ">=9"
   },
-  "packageManager": "pnpm@9.15.2",
-  "eslintConfig": {
-    "extends": [
-      "plugin:storybook/recommended"
-    ]
-  }
+  "packageManager": "pnpm@9.15.2"
 }

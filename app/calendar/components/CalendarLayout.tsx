@@ -1,9 +1,8 @@
-import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector, useAppSession } from "@/lib/hooks";
 import { userApi } from "@/lib/user/userApi";
-import { setSelectedDate, setMonth, setYear } from "../calendarSlice";
-import { Calendar, CalendarProps } from "./Calendar"
-import { DayOfEventsList } from "./DayOfEventsList"
-import { Month } from "react-day-picker";
+import { setMonth, setSelectedDate, setYear } from "../calendarSlice";
+import { Calendar, CalendarProps } from "./Calendar";
+import { DayOfEventsList } from "./DayOfEventsList";
 import { MonthPicker } from "./MonthPicker";
 
 function isWithin24Hours(midnightDate: Date, arbitraryDate: Date) {
@@ -24,9 +23,9 @@ function isWithin24Hours(midnightDate: Date, arbitraryDate: Date) {
 }
 
 export const CalendarLayout = () => {
-    const userId = useAppSelector(state => state.auth.userId)
+    const userData = useAppSession();
     const dispatch = useAppDispatch();
-    const { data } = userApi.useGetUserQuery(userId!)
+    const { data } = userApi.useGetUserQuery(userData.user.id)
     const events = (data?.events || []).map(event => ({
         ...event,
         startDateTime: new Date(event.startDateTime).toLocaleString("en-US")
