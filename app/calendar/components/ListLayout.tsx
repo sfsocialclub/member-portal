@@ -1,7 +1,7 @@
+import { useAppSelector, useAppSession } from "@/lib/hooks";
 import { userApi } from "@/lib/user/userApi";
 import { UserCalendarEvent } from "../models";
 import { DayOfEventsList } from "./DayOfEventsList";
-import { useAppSelector } from "@/lib/hooks";
 import { MonthPicker } from "./MonthPicker";
 
 function filterEventsByMonth(events: UserCalendarEvent[], year: number, month: number) {
@@ -27,7 +27,8 @@ function groupEventsByDay(events: UserCalendarEvent[]) {
 }
 
 export const ListLayout = () => {
-    const userId = useAppSelector(state => state.auth.userId)
+    const userData = useAppSession();
+    const userId = userData.user.id
     const { data } = userApi.useGetUserQuery(userId!)
     const { year, month } = useAppSelector((state) => state.calendar);
 

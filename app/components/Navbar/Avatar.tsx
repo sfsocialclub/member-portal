@@ -1,23 +1,16 @@
-import { useLogoutMutation } from "@/lib/auth/authApi";
-import { authSlice } from "@/lib/auth/authSlice";
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { userApi } from "@/lib/user/userApi";
+import { useAppSession } from "@/lib/hooks";
 import { UserIcon } from "@heroicons/react/24/outline";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export const Avatar = () => {
-  const dispatch = useAppDispatch();
+  const userData = useAppSession();
+  const image = userData.user.image;
   const router = useRouter();
-  const userId = useAppSelector((state) => state.auth.userId);
-  const { data: apiData } = userApi.useGetUserQuery(userId!, { skip: !userId });
-  const [logout] = useLogoutMutation();
 
     const handleLogoutClick = () => {
-    logout().then(()=> {
-      dispatch(authSlice.actions.setRole(undefined));
-      dispatch(authSlice.actions.setUserId(undefined));
-    }).then(()=>window.location.reload());
+    signOut().then(() => { router.refresh() })
   };
 
   return (
@@ -27,10 +20,10 @@ export const Avatar = () => {
         role="button"
         className="btn btn-ghost btn-circle avatar"
       >
-        {!apiData?.photo ? (
+        {!image ? (
           <UserIcon className="size-7" />
         ) : (
-          <img alt="Tailwind CSS Navbar component" src={apiData.photo} />
+          <img className="rounded-full" alt="Tailwind CSS Navbar component" src={image} />
         )}
       </div>
       <ul
@@ -44,7 +37,7 @@ export const Avatar = () => {
           <Link href="/settings">Settings</Link>
         </li>
         <li>
-          <a onClick={handleLogoutClick}>Logout</a>
+          <a onClick={handleLogoutClick}>Log out</a>
         </li>
       </ul>
     </div>

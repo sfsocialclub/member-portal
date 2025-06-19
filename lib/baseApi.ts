@@ -1,10 +1,10 @@
 'use client';
-import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react'
-import axios from 'axios'
-import type { AxiosRequestConfig, AxiosError } from 'axios'
+import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react';
+import type { AxiosError, AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const BASE_URL = '/api';
+const BASE_URL = '/flaskApi';
 
 const axiosBaseQuery =
     (
@@ -22,6 +22,10 @@ const axiosBaseQuery =
     > =>
         async ({ url, method, data, params, headers }) => {
             try {
+                const tokenRes = await fetch("/authToken")
+                const tokenJson = await tokenRes.json()
+                const token = tokenJson.token
+
                 const result = await axios({
                     url: baseUrl + url,
                     method,
@@ -29,6 +33,7 @@ const axiosBaseQuery =
                     params,
                     headers: {
                         ...headers,
+                        'Authorization': token ? `Bearer ${token}` : '',
                         'X-CSRF-TOKEN': Cookies.get('csrf_access_token')
                     },
                 })

@@ -1,16 +1,11 @@
 from flask import Flask, session,request,jsonify
 from flask_cors import CORS
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import set_access_cookies
-from flask_jwt_extended import unset_jwt_cookies
+import jwt
+from functools import wraps
 
 from bson.objectid import ObjectId
-from api.mongodb_client import connector
+from flaskApi.mongodb_client import connector
 
 from datetime import datetime
 from datetime import timedelta
@@ -24,97 +19,47 @@ import bcrypt
 from pymongo import ReturnDocument
 
 import logging
+import os
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def parse_json(data):
-    return json.loads(json_util.dumps(data))
 
 app = Flask(__name__)
 DB = connector()
 CORS(app, support_credentials=True)
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # For testing locally
-# Setup the Flask-JWT-Extended extension
+NEXTAUTH_SECRET = os.environ.get("NEXTAUTH_SECRET")
 
-# If true this will only allow the cookies that contain your JWTs to be sent
-# over https. In production, this should always be set to True
-app.config["JWT_COOKIE_SECURE"] = False
-app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
-app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this "super secret" to something else!
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # Access token lifespan
-jwt = JWTManager(app)
-app.config['SECRET_KEY'] = '<repalce with session token from next.js>'
-@app.after_request
-def refresh_expiring_jwts(response):
-    try:
-        exp_timestamp = get_jwt()["exp"]
-        now = datetime.now(timezone.utc)
-        target_timestamp = datetime.timestamp(now + timedelta(minutes=30))
-        if target_timestamp > exp_timestamp:
-            claims = get_jwt()  # contains your additional_claims
-            
-            # Remove JWT reserved claims like exp, iat, jti, etc.
-            reserved_keys = {"exp", "iat", "jti", "nbf", "sub", "fresh", "type"}
-            additional_claims = {k: v for k, v in claims.items() if k not in reserved_keys}
+def jwt_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth = request.headers.get("Authorization", None)
+        if not auth or not auth.startswith("Bearer "):
+            return jsonify({"msg": "Missing or invalid Authorization header"}), 401
 
-            access_token = create_access_token(identity=get_jwt_identity(), additional_claims=additional_claims)
-            set_access_cookies(response, access_token)
-        return response
-    except (RuntimeError, KeyError):
-        # Case where there is not a valid JWT. Just return the original response
-        return response
+        token = auth.split(" ")[1]
+        try:
+            decoded = jwt.decode(token, NEXTAUTH_SECRET, algorithms=["HS256"])
+            request.user = decoded  # Attach user info to request context
+        except jwt.ExpiredSignatureError:
+            return jsonify({"msg": "Token expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"msg": "Invalid token"}), 401
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def parse_json(data):
+    return json.loads(json_util.dumps(data))
 
 # Liveliness check
-@app.route("/api/ping")
+@app.route("/flaskApi/ping")
 def ping():
-    return jsonify("pong")
-
-@app.route("/api/login", methods=['POST'])
-def login():
-    try:
-        data = request.get_json()
-        email = data['email']
-        password = data['password']
-        # hashpassword
-        password = password.encode("utf-8")
-        
-        user = DB.users.find_one({
-            "email":email,
-        })
-        print("user from database", user)
-        if user is None:
-            # The user was not found on the database
-            return jsonify(message="Invalid credentials"), 401
-        if bcrypt.checkpw(password, user['password']):
-            #store userID in current session
-            session['userID'] = str(user['_id'])
-            additional_claims = {'role': user['role'], 'userId': str(user['_id'])}
-            access_token = create_access_token(identity=str(user['_id']), fresh=True, additional_claims=additional_claims)
-            response = jsonify(role=user['role'], userId=str(user['_id']))
-            set_access_cookies(response, access_token)
-            return response, 200
-        else:
-            logger.error("[!] Failed credential check")
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error":"Missing data"}), 415
+    print("NEXTAUTH_SECRET: ",NEXTAUTH_SECRET)
+    return jsonify(NEXTAUTH_SECRET)
     
-@app.route("/api/logout", methods=["POST"])
-def logout():
-    response = jsonify({"msg": "logout successful"})
-    unset_jwt_cookies(response)
-    return response
-
-# Called on UI page load (e.g. after page refresh)
-# Returns any necessary data stored in jwt
-@app.route("/api/load", methods = ['GET'])
-@jwt_required()
-def load():
-    claims = get_jwt()
-    return jsonify(claims)
-    
-@app.route('/api/users',methods=['GET'])
-@jwt_required()
+@app.route('/flaskApi/users',methods=['GET'])
+@jwt_required
 def users():
     current_role = session.get('role')
     if current_role and current_role == 'admin':
@@ -124,7 +69,7 @@ def users():
     return jsonify({"unauthorized":"Only admins and view this data"}), 403
 
 # Creates
-@app.route("/api/register", methods=['POST'])
+@app.route("/flaskApi/register", methods=['POST'])
 def register():
     try:
         user_info = request.get_json()
@@ -157,8 +102,8 @@ def register():
         logger.error(e)
         return jsonify({"error":"request failed resend data"}), 400
 
-@app.route('/api/create-event', methods=["POST"])
-@jwt_required()
+@app.route('/flaskApi/create-event', methods=["POST"])
+@jwt_required
 def create_event():
     if request.method == 'POST':
         try:
@@ -193,8 +138,8 @@ def create_event():
         return jsonify({"error":"Most be a post request"}), 400
 
 # Reads
-@app.route('/api/user/<userid>',methods=['GET'])
-@jwt_required()
+@app.route('/flaskApi/user/<userid>',methods=['GET'])
+@jwt_required
 def user(userid):
     try:
         user = DB.users.find_one({"_id":ObjectId(userid)})
@@ -242,8 +187,8 @@ def user(userid):
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/events',methods=['GET','POST'])
-@jwt_required()
+@app.route('/flaskApi/events',methods=['GET','POST'])
+@jwt_required
 def events():
     try:
         if request.method == "POST":
@@ -276,8 +221,8 @@ def modify_entity_ids(entities):
         all_entities.append(modified_entity)
     return all_entities
 
-@app.route('/api/event/<eventID>',methods=['GET'])
-@jwt_required()
+@app.route('/flaskApi/event/<eventID>',methods=['GET'])
+@jwt_required
 def event(eventID):
     try:
         print("check event id",eventID)
@@ -290,8 +235,8 @@ def event(eventID):
         return jsonify({"error":"issue with request"}), 400
 
 # Updates
-@app.route('/api/update-event/<eventID>',methods=['PUT'])
-@jwt_required()
+@app.route('/flaskApi/update-event/<eventID>',methods=['PUT'])
+@jwt_required
 def update_event(eventID):
     try:
         if permission_to_modify_event(eventID,session['userID']) is False:
@@ -313,8 +258,8 @@ def update_event(eventID):
         traceback.print_exc()
         return jsonify({"error": "Failed to update event"}), 500
 
-@app.route('/api/update-user/<userID>',methods=['PUT'])
-@jwt_required()
+@app.route('/flaskApi/update-user/<userID>',methods=['PUT'])
+@jwt_required
 def update_user(userID):
     try:
         if userID is not session["userID"]:
@@ -336,8 +281,8 @@ def update_user(userID):
         traceback.print_exc()
         return jsonify({"error": "Failed to update user"}), 500
 
-@app.route('/api/update-password/<userID>',methods=['PUT'])
-@jwt_required()
+@app.route('/flaskApi/update-password/<userID>',methods=['PUT'])
+@jwt_required
 def update_password(userID):
     try: 
         if userID != session['userID']:
@@ -362,8 +307,8 @@ def update_password(userID):
         return jsonify({"error":"Issue with request"}), 400
 
 # Deletes
-@app.route('/api/delete-event/<eventID>', methods=['DELETE'])
-@jwt_required()
+@app.route('/flaskApi/delete-event/<eventID>', methods=['DELETE'])
+@jwt_required
 def delete_event(eventID):
     try:
         if permission_to_modify_event(eventID,session['userID']) is False:
@@ -380,8 +325,8 @@ def delete_event(eventID):
         traceback.print_exc()
         return jsonify({"error": "Failed to delete event"}), 500
 
-@app.route('/api/delete-user/<userID>', methods=['DELETE'])
-@jwt_required()
+@app.route('/flaskApi/delete-user/<userID>', methods=['DELETE'])
+@jwt_required
 def delete_user(userID):
     try:
         if permission_to_modify_user(userID) is False:
@@ -414,12 +359,12 @@ def permission_to_modify_user(userID):
         else:
             return True
         
-@app.route('/api/scan', methods=['POST'])
-@jwt_required()
+@app.route('/flaskApi/scan', methods=['POST'])
+@jwt_required
 def scan():
-    jwt_role = get_jwt()['role']
-    if jwt_role != 'admin':
-        return jsonify({"message":"Unauthorized"}), 404
+    # TODO: Only users with permission to scan can do so
+    # if has_scan_permission is False:
+    #     return jsonify({"message":"Unauthorized"}), 404
     try:
         user_id = request.get_json().get("userId")
         event_id = request.get_json().get("eventId")

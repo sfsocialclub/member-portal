@@ -1,13 +1,16 @@
-import { useAppSelector } from "@/lib/hooks"
-import { QRCodeSVG } from "qrcode.react"
+import { useAppSession } from "@/lib/hooks";
+import { QRCodeSVG } from "qrcode.react";
 
 export const UserQRCode = () => {
-    const userId = useAppSelector(state => state.auth.userId) || ''
+    const session = useAppSession();
 
     return (
-        <div className="mt-10 px-7 py-[50px] bg-white shadow rounded-[20px] flex flex-col items-center">
-            <QRCodeSVG value={JSON.stringify({ userId })} size={128} />
-            <p className="mt-2 text-sm text-gray-500">Member ID: {userId}</p>
-        </div>
+        <>
+            <div className="mt-10 px-7 py-8 bg-white shadow rounded-[20px] flex flex-col items-center space-y-2">
+                <h2 className="text-2xl font-semibold mb-4">Your QR Code</h2>
+                <QRCodeSVG value={JSON.stringify({ userId: session.user.id })} size={256} />
+                <p className="mt-2 text-sm text-gray-500">Member ID: {session.user.id}</p>
+            </div>
+        </>
     )
 }
