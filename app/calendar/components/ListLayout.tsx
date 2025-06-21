@@ -1,9 +1,8 @@
+import { eventsApi } from "@/lib/eventsApi";
 import { useAppSelector, useAppSession } from "@/lib/hooks";
-import { userApi } from "@/lib/user/userApi";
 import { UserCalendarEvent } from "../models";
 import { DayOfEventsList } from "./DayOfEventsList";
 import { MonthPicker } from "./MonthPicker";
-import { eventsApi } from "@/lib/eventsApi";
 
 function filterEventsByMonth(events: UserCalendarEvent[], year: number, month: number) {
     return events.filter(event => {

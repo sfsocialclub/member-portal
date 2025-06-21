@@ -14,7 +14,7 @@ export default function ProtectedRouteProvider({
   const [loading, setLoading] = useState(true);
   const router = useRouterWithOptimisticPathname();
   const { optimisticPath: pathname, isPublicRoute } = router;
-  const isAdminRoute = pathname === "/admin";
+  const isAdminRoute = pathname.startsWith("/admin");
   const isRootPath = pathname === "/"
 
   useEffect(() => {
@@ -32,9 +32,9 @@ export default function ProtectedRouteProvider({
       } else {
         setLoading(false);
 
-        // 2. Redirect admin route attempt for a non-admin user to /member
+        // 2. Redirect admin route attempt for a non-admin user to /home
         if (isAdminRoute && !session.user.isAdmin) {
-          router.push("/member");
+          router.push("/home");
           return;
         }
 

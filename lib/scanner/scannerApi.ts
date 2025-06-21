@@ -18,7 +18,6 @@ export const scannerApi = baseApi
                 data,
                 method: "post"
             }),
-            invalidatesTags: ['AttendedEvents']
         })
     }),
     overrideExisting: false,

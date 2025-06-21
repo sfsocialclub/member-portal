@@ -24,10 +24,6 @@ const axiosBaseQuery =
     > =>
         async ({ url, method, data, params, headers }) => {
             try {
-                // const tokenRes = await fetch("/authToken")
-                // const tokenJson = await tokenRes.json()
-                // const token = tokenJson.token
-
                 const session = await getSession() as SFSCSession; // dynamically fetch session
                 const token = session?.apiToken;
 
@@ -61,4 +57,4 @@ export const baseApi = createApi({
     }),
     endpoints: () => ({}),
 })
-.enhanceEndpoints({ addTagTypes: ['AttendedEvents'] })
+.enhanceEndpoints({ addTagTypes: ['Events', 'Event'] })

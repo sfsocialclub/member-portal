@@ -1,10 +1,9 @@
+import { eventsApi } from "@/lib/eventsApi";
 import { useAppDispatch, useAppSelector, useAppSession } from "@/lib/hooks";
-import { userApi } from "@/lib/user/userApi";
 import { setMonth, setSelectedDate, setYear } from "../calendarSlice";
 import { Calendar, CalendarProps } from "./Calendar";
 import { DayOfEventsList } from "./DayOfEventsList";
 import { MonthPicker } from "./MonthPicker";
-import { eventsApi } from "@/lib/eventsApi";
 
 function isWithin24Hours(midnightDate: Date, arbitraryDate: Date) {
     // Ensure both inputs are Date objects

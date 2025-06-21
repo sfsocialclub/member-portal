@@ -9,11 +9,11 @@ export type CalendarEvent = {
         name: string;
         address: string;
     };
-    scanned: boolean;
-    userIsHost: boolean;
-    hostUserIds: string[];
-    scanCount: number;
-    scans: Scan[]
+    scanned: boolean; // Only visible to non-admins
+    userIsHost: boolean; // Only visible to non-admins
+    hostUserIds: string[]; // Slack ID of users. Only visible to admins
+    scanCount: number; // Only visible to admins
+    scans: Scan[] // Only visible to admins
 };
 
 export interface Scan {

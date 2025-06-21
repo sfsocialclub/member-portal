@@ -3,11 +3,11 @@ import { store } from "@/lib/store";
 import { SessionProvider } from "next-auth/react";
 import { Provider } from "react-redux";
 import { ProtectedPageLayout } from "./ProtectedPageLayout";
-import ProtectedRouteProvider from "./template";
+import ProtectedRouteProvider from "./ProtectedRouteProvider";
 
-export const Providers = ({ children, session }: { children: React.ReactNode, session:any }) => {
+export const Providers = ({ children, session }: { children: React.ReactNode, session: any }) => {
     return (
-    <SessionProvider session={session} basePath="/api/auth">
+        <SessionProvider session={session} basePath="/api/auth">
             <Provider store={store}>
                 <ProtectedRouteProvider>
                     <ProtectedPageLayout>
@@ -15,6 +15,6 @@ export const Providers = ({ children, session }: { children: React.ReactNode, se
                     </ProtectedPageLayout>
                 </ProtectedRouteProvider>
             </Provider>
-    </SessionProvider>
+        </SessionProvider>
     )
 }

@@ -7,9 +7,7 @@ from functools import wraps
 from bson.objectid import ObjectId
 from flaskApi.mongodb_client import connector
 
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from datetime import datetime, timezone
 
 from pymongo.errors import DuplicateKeyError
 import traceback
@@ -328,7 +326,7 @@ def scan():
         data = request.get_json()
         user_id = data.get("userId")  # the person being scanned
         event_id = data.get("eventId")
-        scan_time = datetime.now(datetime.timezone.utc)
+        scan_time = datetime.now(timezone.utc)
 
         if not user_id or not event_id:
             return jsonify({"error": "Missing userId or eventId"}), 400
@@ -357,11 +355,29 @@ def scan():
         except DuplicateKeyError:
             return jsonify({"error": "User has already scanned for this event"}), 409
         except Exception as e:
+            traceback.print_exc()
             return jsonify({"error": "Unable to create scan record", "details": str(e)}), 500
 
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": "Unable to create scan record"}), 500
+    
+# Delete the scan document
+@app.route('/flaskApi/admin/delete-scan/<scanId>', methods=['DELETE'])
+@jwt_required
+@role_required('admin')
+def delete_scan(scanId):
+    try:
+        filter = {"_id": ObjectId(scanId)}
+        result = DB.code_scans.delete_one(filter)
+        
+        if result.deleted_count > 0:
+            return jsonify({"message": "Scan deleted successfully"}), 200
+        else:
+            return jsonify({"error": "Scan not found"}), 404
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": "Failed to delete scan"}), 500
 
 # Example usage  
 # curl -X POST https://127.0.0.1:5328/rsvp -H "Content-Type: application/json" -d '{"status": "maybe", "user_id": "your_user_id", "event_id": "your_event_id"}' 
