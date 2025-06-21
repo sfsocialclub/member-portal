@@ -21,7 +21,7 @@ from pymongo import ReturnDocument
 import logging
 import os
 
-from utils import add_timestamps
+from flaskApi.utils import add_timestamps
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
