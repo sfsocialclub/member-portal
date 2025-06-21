@@ -24,7 +24,6 @@ export const userApi = baseApi
             query: (id) => ({
                 url: `/user/${id}`,
             }),
-            providesTags: ['AttendedEvents']
         })
     }),
     overrideExisting: false

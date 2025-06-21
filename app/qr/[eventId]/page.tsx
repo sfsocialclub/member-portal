@@ -1,22 +1,19 @@
 "use client"
-import { IDetectedBarcode, IScannerProps } from "@yudiel/react-qr-scanner";
-import { QRScanner } from "./components/QRScanner";
-import { useState } from "react";
-import { useScanMutation } from "@/lib/scanner/scannerApi";
 import { useGetEventsQuery } from "@/lib/eventsApi";
-import { DEFAULT_SCAN_DELAY, DelayCountdown } from "./components/DelayCountdown";
+import { useScanMutation } from "@/lib/scanner/scannerApi";
+import { IDetectedBarcode, IScannerProps } from "@yudiel/react-qr-scanner";
 import { useParams } from "next/navigation";
+import { useState } from "react";
+import { DEFAULT_SCAN_DELAY, DelayCountdown } from "./components/DelayCountdown";
+import { QRScanner } from "./components/QRScanner";
 
 /**
- * Renders proof of concept QR Scanner to send decrypted value to backend
+ * Renders QR Scanner to send decrypted value to backend
  * 
- * TODO: Separate QR Scanner feature in another admin page or section
- * TODO: Handle appropriate scenarios for QR scan
  */
 export default function EventHostPage() {
     const [lastScannedCodes, setLastScannedCodes] = useState<IDetectedBarcode[]>([]);
     const [clientSideError, setClientSideError] = useState<string | null>(null);
-    // const [selectedEventId, setSelectedEventId] = useState<string>('');
     const { data: events, isFetching: isEventsFetching } = useGetEventsQuery();
     const [scanRequest, scanRequestResult] = useScanMutation();
     const [scanDelay, setScanDelay] = useState<number>();
@@ -63,6 +60,8 @@ export default function EventHostPage() {
     const errorMessage = clientSideError || (scanRequestResult?.error as { data?: any })?.data?.error;
     const scanRequestMessage = scanRequestResult.data?.message;
 
+    const isHost = event?.userIsHost;
+
     if(isEventsFetching) {
         return (
             <span className="loading loading-dots loading-lg"></span>
@@ -74,6 +73,14 @@ export default function EventHostPage() {
             <p className="text-base">Event not found</p>
         </div>
     )
+
+    if(!isHost) {
+        return (
+            <div className="w-full h-screen flex items-center justify-center">
+                <p className="text-base">Unauthorized</p>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col gap-8 max-w-md w-full">

@@ -8,13 +8,15 @@ export default function LoginPage() {
   const [providers, setProviders] = useState<Awaited<ReturnType<typeof getProviders>>>(null);
   const session = useAppSession();
 
-  // const { data: userInfo, isLoading: userInfoLoading } = useGetSlackUserInfoQuery();
-
   useEffect(() => {
     getProviders().then((providers) => {
       setProviders(providers)
     });
   }, []);
+
+  if(session) {
+    <div>You should be redirected soon...</div>
+  }
 
   return (
     <div className="h-full w-full flex items-center justify-center">

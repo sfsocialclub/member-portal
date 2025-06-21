@@ -12,7 +12,7 @@ import Link from "next/link";
 
 
 const AdminEventsPage = () => {
-    const { data: events } = useGetEventsAsAdminQuery();
+    const { data: events, isFetching } = useGetEventsAsAdminQuery();
     const { data: users } = useGetSlackUsersQuery();
 
     const [createEditModalOpen, setCreateEditModalOpen] = useState(false);
@@ -110,7 +110,7 @@ const AdminEventsPage = () => {
                 Create Event
             </button>
 
-            <DataGrid rows={events} columns={cols} showToolbar />
+            <DataGrid rows={events} columns={cols} showToolbar loading={isFetching}/>
             {createEditModalOpen && <EventModal
                 isOpen={createEditModalOpen}
                 onClose={() => {

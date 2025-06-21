@@ -8,7 +8,6 @@ interface EventsParameters {
     today?: boolean;
 }
 export const eventsApi = baseApi
-.enhanceEndpoints({ addTagTypes: ['Events'] })
 .injectEndpoints({
     endpoints: (builder) => ({
         getEvents: builder.query<EventsResponse, EventsParameters | void>({
@@ -21,7 +20,8 @@ export const eventsApi = baseApi
         getEventAsAdmin: builder.query<CalendarEvent, string>({
             query: (eventId) => ({
                 url: `/admin/event/${eventId}`
-            })
+            }),
+            providesTags: (result, error, eventId) => [{ type: 'Event', id: eventId }],
         }),
         getEventsAsAdmin: builder.query<EventsResponse, EventsParameters | void>({
             query: (params) => ({

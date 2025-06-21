@@ -1,6 +1,5 @@
 import { eventsApi } from "@/lib/eventsApi";
 import { useAppSelector, useAppSession } from "@/lib/hooks";
-import { userApi } from "@/lib/user/userApi";
 import { DayPicker, Modifiers, MonthChangeEventHandler } from "react-day-picker";
 
 export type CalendarProps = {
