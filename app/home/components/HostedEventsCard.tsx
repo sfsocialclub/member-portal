@@ -9,6 +9,10 @@ export const HostedEventsCard = () => {
     const eventsUserIsHosting = data?.filter(event => event.userIsHost) || []
     const router= useRouter();
 
+    if(eventsUserIsHosting.length === 0) {
+        return null;
+    }
+    
     return (
         <div className="flex flex-col gap-y-4">
         <h2 className="font-semibold">Events you're hosting</h2>
