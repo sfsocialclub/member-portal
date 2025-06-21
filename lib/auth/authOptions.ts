@@ -4,10 +4,11 @@ import SlackProvider from "next-auth/providers/slack";
 import client from "@/lib/db";
 import jwt from 'jsonwebtoken';
 import { WebClient } from "@slack/web-api";
+import { encode } from "next-auth/jwt";
 
 export interface SFSCSession extends Session {
     user: SessionUser;
-    apiToken: Token;
+    apiToken: string;
 }export type SessionUser = Session['user'] & {
     id: string; // User ID in mongoDB
     slackId: string; // Slack ID
@@ -91,6 +92,9 @@ export const authOptions: NextAuthOptions = {
             session.user.slackId = token.slackId;
             session.user.id = token.sub;
             session.user.isAdmin = token.isAdmin;
+            session.apiToken = jwt.sign(token, process.env.NEXTAUTH_SECRET!, {
+                algorithm: "HS256",
+            })
             console.log(`Session = ${JSON.stringify({ session }, null, 2)}`)
 
             return { ...session }

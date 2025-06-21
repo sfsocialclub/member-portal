@@ -1,6 +1,6 @@
 import { authOptions, SFSCSession } from "@/lib/auth/authOptions";
-import { getServerToken } from "@/lib/auth/getServerToken";
 import client from "@/lib/db";
+import { getCachedSlackUsers, setCachedSlackUsers } from "@/lib/slack/slackCache";
 import { WebClient } from '@slack/web-api';
 import { getServerSession } from 'next-auth/next';
 import { NextRequest } from 'next/server';
@@ -32,17 +32,30 @@ export async function GET(req: NextRequest) {
   const slackToken = account.access_token
 
   try {
-    const web = new WebClient(slackToken);
+    const web = new WebClient(slackToken, {
+      rejectRateLimitedCalls: true
+    });
     const result = await web.users.list({});
 
-    return new Response(JSON.stringify(result.members), {
+    if (result.ok && result.members) {
+      await setCachedSlackUsers(result.members)
+      return new Response(JSON.stringify(result.members), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    console.warn('Slack API error', result.error);
+  } catch (error) {
+    console.error('Slack API error:', error);
+
+    const cached = await getCachedSlackUsers();
+    if (cached) return new Response(JSON.stringify(cached), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (error) {
-    console.error('Slack API error:', error);
-    return new Response(JSON.stringify({ error: 'Slack API failed' }), {
-      status: 500,
+
+    return new Response(JSON.stringify({ error: 'Slack API unavailable and no cache found' }), {
+      status: 503,
       headers: { 'Content-Type': 'application/json' },
     });
   }

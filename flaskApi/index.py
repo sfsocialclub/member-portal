@@ -21,6 +21,8 @@ from pymongo import ReturnDocument
 import logging
 import os
 
+from utils import add_timestamps
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -49,6 +51,17 @@ def jwt_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if(role == 'admin'):
+                if request.user['isAdmin'] is not True:
+                    return jsonify({"error":"Unauthorized access"}), 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 def parse_json(data):
     return json.loads(json_util.dumps(data))
 
@@ -68,74 +81,61 @@ def users():
         return jsonify({"data":all_users})
     return jsonify({"unauthorized":"Only admins and view this data"}), 403
 
-# Creates
-@app.route("/flaskApi/register", methods=['POST'])
-def register():
-    try:
-        user_info = request.get_json()
-        user = DB.users.find_one({"email":user_info['email']}), 400
-        print("found user",user)
-        if user[0] is not None:
-            return jsonify({"error":"user has already been created"})
-        enhanced_user_info = {
-            "name":user_info['name'],
-            "email":user_info["email"],
-            "password": bcrypt.hashpw(user_info["password"].encode("utf-8"),bcrypt.gensalt()), # hold of on adding salt bycrypt.gensalt()
-            "role": "user", # admins should be not be made through portal
-            "points": 0.0,
-            "events_attended": [],
-            "events_created": [],
-            "events_missed": [],
-            "created_at": datetime.now()
-            }
-        print(f"[+] user info: {enhanced_user_info}")
-        DB.users.insert_one(enhanced_user_info)
-        user = DB.users.find_one({"name":user_info['name']})
-        if user:
-            user_id = str(user['_id'])
-            logger.info(f"[+] user found {user_id}")
-            return jsonify({"userId":user_id}), 200
-        else:
-            logger.error("[!] Error with request")
-            return jsonify({"failed","user not created"}), 500
-    except Exception as e:
-        logger.error(e)
-        return jsonify({"error":"request failed resend data"}), 400
 
-@app.route('/flaskApi/create-event', methods=["POST"])
+@app.route('/flaskApi/event', methods=["POST"])
 @jwt_required
 def create_event():
-    if request.method == 'POST':
-        try:
-            event_info = request.get_json()
-            if event_info.get("name",None) is None or event_info.get("host",None) is None or event_info.get("description",None) is None:
-                return jsonify({"error":"missing required feilds"}), 400
-            event = {
-                "name": event_info.get("name"),
-                "host": event_info.get('host'),
-                "location":event_info.get('location'),
-                "description": event_info.get('description'),
-                "partiful_link":event_info.get("partiful_link"),
-                "event_date":event_info.get("event_date"),
-                "qr_codes":[],
-                "attended": [],
-                "going": [],
-                "maybes":[],
-                "ics_file": event_info.get('ics_file'),
-                "is_paid":event_info.get("is_paid"),
-                "attendance_points": event_info.get("points"),
-                "created_at":datetime.now()
-            }
-            logger.info(f"[+] current event {event}")
-            DB.events.insert_one(event)
-            event_data = DB.events.find_one({"name": event['name']})
-            event_data['_id'] = str(event_data['_id'])  # Convert ObjectId to string
-            return jsonify({"id": event_data['_id']}), 200
-        except Exception as e:
-            traceback.print_exc()
-            return jsonify({"error":"Failed to send data"}), 400
-    else:
-        return jsonify({"error":"Most be a post request"}), 400
+    try:
+        event_info = request.get_json()
+        if event_info.get("name",None) is None or event_info.get("description",None) is None:
+            return jsonify({"error":"missing required fields"}), 400
+        event = {
+            "name": event_info.get("name"),
+            "hostUserIds": event_info.get('hostUserIds'),
+            "location":event_info.get('location'),
+            "description": event_info.get('description'),
+            # "partiful_link":event_info.get("partiful_link"),
+            # "event_date":event_info.get("event_date"),
+            "startDateTime":event_info.get("startDateTime", None),
+            "endDateTime":event_info.get("endDateTime", None),
+        }
+
+        result = DB.events.insert_one(add_timestamps(event))
+        result.inserted_id
+        event_data = DB.events.find_one({"_id": result.inserted_id})
+        return jsonify({"id": str(event_data['_id'])}), 200
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error":"Failed to send data"}), 400
+    
+@app.route('/flaskApi/event/<eventId>', methods=["PUT"])
+@jwt_required
+def update_event(eventId):
+    try:
+        event_info = request.get_json()
+        if event_info.get("name",None) is None or event_info.get("description",None) is None:
+            return jsonify({"error":"missing required fields"}), 400
+        event = {
+            "name": event_info.get("name"),
+            "hostUserIds": event_info.get('hostUserIds'),
+            "location":event_info.get('location'),
+            "description": event_info.get('description'),
+            # "partiful_link":event_info.get("partiful_link"),
+            # "event_date":event_info.get("event_date"),
+            "startDateTime":event_info.get("startDateTime", None),
+            "endDateTime":event_info.get("endDateTime", None),
+        }
+
+        result = DB.events.update_one(
+            {"_id": ObjectId(eventId)},
+            {"$set": add_timestamps(event, is_update=True)})
+        if result.modified_count > 0:
+            return jsonify({"message": "Event updated successfully"}), 200
+        else:
+            return jsonify({"error": "Event not found"}), 404
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error":"Failed to update event"}), 500
 
 # Reads
 @app.route('/flaskApi/user/<userid>',methods=['GET'])
@@ -186,134 +186,126 @@ def user(userid):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/flaskApi/admin/events',methods=['GET'])
+@jwt_required
+@role_required('admin')
+def adminEvents():
+    try:
+        filter_obj = {}
+        
+        raw_events = DB.events.find(filter_obj)
+        events_list = []
 
-@app.route('/flaskApi/events',methods=['GET','POST'])
+        for event in raw_events:
+            event_id = str(event.get("_id"))  # Ensure it's a string for scan lookup
+            scan_count = DB.code_scans.count_documents({"event_id": ObjectId(event_id)})
+
+            event = modify_entity_ids(event)
+            event["scanCount"] = scan_count
+
+            events_list.append(event)
+
+        return jsonify(events_list), 200
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error":"issue with request"}), 400
+
+@app.route('/flaskApi/events',methods=['GET'])
 @jwt_required
 def events():
     try:
-        if request.method == "POST":
-            filter_obj = request.get_json()
-        else:
-            if(request.args.get('today') == 'true'):
-                date_param = datetime.now()
-                start_date = date_param - timedelta(hours=24)
-                end_date = date_param + timedelta(hours=24)
-                filter_obj = {"startDateTime": {"$gte": start_date, "$lte": end_date}}
-            else:
-                filter_obj = {}
-        print('filter_obj:',filter_obj)
-        events = DB.events.find(filter_obj)
-        # remove objectId from events
-        all_events = modify_entity_ids(events)
-        print(all_events)
-        return jsonify(all_events),200
+        current_user = request.user
+        user_slack_id = current_user.get("slackId")
+        user_id = current_user.get("sub")
+
+        scanned_event_docs = DB.code_scans.find({ "user_id": ObjectId(user_id) }, {"_id": 0, "event_id": 1})
+        scanned_event_ids = {str(doc["event_id"]) for doc in scanned_event_docs}
+
+        raw_events = DB.events.find({})
+        events_list = []
+
+        for event in raw_events:
+            event_id = str(event.get("_id"))
+            event = modify_entity_ids(event)
+            
+            event["userIsHost"] = user_slack_id in event.get("hostUserIds", [])
+            event["scanned"] = event_id in scanned_event_ids
+
+            # Hide hostUserIds for non-admins
+            event.pop("hostUserIds", None)
+
+            events_list.append(event)
+            
+        return jsonify(events_list), 200
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error":"issue with request"}), 400
 
-def modify_entity_ids(entities):
-    all_entities = []
-    for entity in entities:
-        print("current entities being modified")
-        modified_entity = entity
-        modified_entity = {key: value for key, value in entity.items() if key != "_id"}
-        modified_entity["id"] = str(entity["_id"])
-        all_entities.append(modified_entity)
-    return all_entities
+def modify_entity_ids(entity):
+    if isinstance(entity, list):
+        return [modify_entity_ids(item) for item in entity]
+    elif isinstance(entity, dict):
+        new_entity = {}
+        for k, v in entity.items():
+            if isinstance(v, ObjectId):
+                v = str(v)
+            elif isinstance(v, dict) or isinstance(v, list):
+                v = modify_entity_ids(v)
 
-@app.route('/flaskApi/event/<eventID>',methods=['GET'])
+            if k == "_id":
+                new_entity["id"] = v
+            else:
+                new_entity[k] = v
+        return new_entity
+    else:
+        return entity
+
+@app.route('/flaskApi/admin/event/<eventID>', methods=['GET'])
 @jwt_required
+@role_required('admin')
 def event(eventID):
     try:
-        print("check event id",eventID)
-        event = DB.events.find({"_id":ObjectId(eventID)})
-        print("all events found",event)
-        modified_event = modify_entity_ids(event)
-        return jsonify({"data":modified_event}),200
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error":"issue with request"}), 400
-
-# Updates
-@app.route('/flaskApi/update-event/<eventID>',methods=['PUT'])
-@jwt_required
-def update_event(eventID):
-    try:
-        if permission_to_modify_event(eventID,session['userID']) is False:
-            return jsonify({"error":"Unauthorized access"}), 403
-        
-        event_data = request.get_json()
-        event_filter = {"_id": ObjectId(eventID)}
-        update_event_data = {**event_data,
-                             "updated_at": datetime.now()}
-        update_operation = {"$set": update_event_data}
-        
-        result = DB.events.update_one(event_filter, update_operation)
-        
-        if result.matched_count > 0:
-            return jsonify({"message": "Event updated successfully"}), 200
-        else:
+        # Get single event document
+        event = DB.events.find_one({"_id": ObjectId(eventID)})
+        if not event:
             return jsonify({"error": "Event not found"}), 404
+
+        # Fetch scans for the event
+        scans_cursor = DB.code_scans.find({"event_id": ObjectId(eventID)})
+        scans_list = list(scans_cursor)
+
+        # Get unique user_ids from scans
+        user_ids = list({scan["user_id"] for scan in scans_list})
+        users_cursor = DB.users.find({"_id": {"$in": user_ids}})
+        user_map = {
+            str(user["_id"]): user.get("name", "") for user in users_cursor
+        }
+
+        # Attach user names to scans
+        modified_scans = []
+        for scan in scans_list:
+            scan_mod = modify_entity_ids(scan)
+            scan_mod["userName"] = user_map.get(scan_mod["user_id"], "Unknown")
+            modified_scans.append(scan_mod)
+
+        # Final event object
+        modified_event = modify_entity_ids(event)
+        modified_event["scans"] = modified_scans
+
+        return jsonify(modified_event), 200
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"error": "Failed to update event"}), 500
+        return jsonify({"error": "issue with request"}), 400
 
-@app.route('/flaskApi/update-user/<userID>',methods=['PUT'])
-@jwt_required
-def update_user(userID):
-    try:
-        if userID is not session["userID"]:
-            return jsonify({"error":"Unauthorized access"}), 403
-        
-        user_data = request.get_json()
-        user_filter = {"_id": ObjectId(userID)}
-        updated_user_data = {**user_data,
-                             "updated_at":datetime.now()}
-        update_operation = {"$set": updated_user_data}
-        
-        result = DB.users.update_one(user_filter, update_operation)
-        
-        if result.matched_count > 0:
-            return jsonify({"message": "User updated successfully"}), 200
-        else:
-            return jsonify({"error": "User not found"}), 404
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": "Failed to update user"}), 500
 
-@app.route('/flaskApi/update-password/<userID>',methods=['PUT'])
-@jwt_required
-def update_password(userID):
-    try: 
-        if userID != session['userID']:
-            return jsonify({"error":"Unauthorized access"}), 403
-        user_info = request.json()
-        user_email = user_info.get("email")
-        password = user_info.get("password")
-        if user_email:
-            # user email and userID must match with user from mongo
-            mongo_user = DB.users.find_one({"email":user_email})
-            if userID == str(mongo_user["_id"]) and mongo_user["email"] == user_email:
-                encrypted_pass = bcrypt.hashpw(password.encode("utf-8"),bcrypt.gensalt())
-                user_filter = {"email": user_email}
-                new_field = {"$set": {"password": encrypted_pass}}
-                DB.users.update_one(user_filter, new_field)
-                print('updated password successfully')
-                return jsonify({"sucess":f"{user_email} password has been updated"}), 200
-        else:
-            return jsonify({"error":"User email was not in request, or invalid"}), 400
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error":"Issue with request"}), 400
 
-# Deletes
+# Delete only the event document (not relations to the event)
 @app.route('/flaskApi/delete-event/<eventID>', methods=['DELETE'])
 @jwt_required
+@role_required('admin')
 def delete_event(eventID):
     try:
-        if permission_to_modify_event(eventID,session['userID']) is False:
-            return jsonify({"error":"Unauthorized access"}), 403
-        
         event_filter = {"_id": ObjectId(eventID)}
         result = DB.events.delete_one(event_filter)
         
@@ -324,63 +316,43 @@ def delete_event(eventID):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": "Failed to delete event"}), 500
-
-@app.route('/flaskApi/delete-user/<userID>', methods=['DELETE'])
-@jwt_required
-def delete_user(userID):
-    try:
-        if permission_to_modify_user(userID) is False:
-            return jsonify({"error":"Unauthorized access"}), 403
-        
-        user_filter = {"_id": ObjectId(userID)}
-        result = DB.users.delete_one(user_filter)
-        
-        if result.deleted_count > 0:
-            return jsonify({"message": "User deleted successfully"}), 200
-        else:
-            return jsonify({"error": "User not found"}), 404
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": "Failed to delete user"}), 500
-    
-def permission_to_modify_event(eventID,userID):
-         # Only admins and the host of the event can remove the event
-        event = DB.events.find_one({"_id":ObjectId(eventID)})
-        current_user = DB.users.find_one({"_id":userID})
-        if event['host'] != current_user["email"] or current_user['role'] != 'admin':
-            return False
-        else:
-            return True
-        
-def permission_to_modify_user(userID):
-        # Admins can delete any user but a user can only delete themselves
-        if session['role'] != 'admin' or userID != session['userID']:
-            return False
-        else:
-            return True
         
 @app.route('/flaskApi/scan', methods=['POST'])
 @jwt_required
 def scan():
-    # TODO: Only users with permission to scan can do so
-    # if has_scan_permission is False:
-    #     return jsonify({"message":"Unauthorized"}), 404
     try:
-        user_id = request.get_json().get("userId")
-        event_id = request.get_json().get("eventId")
-        scan_time = datetime.now()
+        # Get user making the request from JWT
+        scanner_id = request.user["slackId"]
+
+        # Extract data from the request
+        data = request.get_json()
+        user_id = data.get("userId")  # the person being scanned
+        event_id = data.get("eventId")
+        scan_time = datetime.now(datetime.timezone.utc)
 
         if not user_id or not event_id:
-            return jsonify({"error":"Missing user id or event id"}), 400
-        
+            return jsonify({"error": "Missing userId or eventId"}), 400
+
+        # Fetch the event to check hostUserIds
+        event = DB.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            return jsonify({"error": "Event not found"}), 404
+
+        # Convert host IDs to strings for comparison
+        host_ids = [str(uid) for uid in event.get("hostUserIds", [])]
+
+        if scanner_id not in host_ids:
+            return jsonify({"error": "Unauthorized: not a host of this event"}), 403
+
+        # Proceed to insert scan record
         scan_doc = {
-            "event_id":ObjectId(event_id),
-            "user_id":ObjectId(user_id),
-            "scan_time":scan_time
+            "event_id": ObjectId(event_id),
+            "user_id": ObjectId(user_id),
+            "scan_time": scan_time
         }
 
         try:
-            DB.code_scans.insert_one(scan_doc)
+            DB.code_scans.insert_one(add_timestamps(scan_doc))
             return jsonify({"message": "Scan recorded successfully"}), 201
         except DuplicateKeyError:
             return jsonify({"error": "User has already scanned for this event"}), 409
@@ -389,7 +361,7 @@ def scan():
 
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"error":"Unable to create scan record"}), 500
+        return jsonify({"error": "Unable to create scan record"}), 500
 
 # Example usage  
 # curl -X POST https://127.0.0.1:5328/rsvp -H "Content-Type: application/json" -d '{"status": "maybe", "user_id": "your_user_id", "event_id": "your_event_id"}' 

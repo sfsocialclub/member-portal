@@ -12,9 +12,14 @@
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.9.1",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@fontsource/dm-sans": "^5.2.5",
     "@fontsource/red-hat-display": "^5.2.5",
     "@heroicons/react": "^2.2.0",
+    "@mui/icons-material": "^7.1.2",
+    "@mui/material": "^7.1.2",
+    "@mui/x-data-grid": "^8.5.3",
     "@reduxjs/toolkit": "^2.5.0",
     "@slack/web-api": "^7.9.2",
     "@tailwindcss/postcss": "^4.0.4",
@@ -47,6 +52,10 @@
     "@types/js-cookie": "^3.0.6",
     "daisyui": "5.0.43",
     "msw": "^2.7.0"
+  },
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "engines": {
     "node": ">=22",
