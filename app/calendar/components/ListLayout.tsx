@@ -3,6 +3,7 @@ import { userApi } from "@/lib/user/userApi";
 import { UserCalendarEvent } from "../models";
 import { DayOfEventsList } from "./DayOfEventsList";
 import { MonthPicker } from "./MonthPicker";
+import { eventsApi } from "@/lib/eventsApi";
 
 function filterEventsByMonth(events: UserCalendarEvent[], year: number, month: number) {
     return events.filter(event => {
@@ -29,10 +30,13 @@ function groupEventsByDay(events: UserCalendarEvent[]) {
 export const ListLayout = () => {
     const userData = useAppSession();
     const userId = userData.user.id
-    const { data } = userApi.useGetUserQuery(userId!)
+    const { data } = eventsApi.useGetEventsQuery();
+        const events = (data || []).map(event => ({
+            ...event,
+            startDateTime: new Date(event.startDateTime).toLocaleString("en-US")
+          }));
     const { year, month } = useAppSelector((state) => state.calendar);
 
-    const events = data?.events || [];
     const eventsThisMonth = groupEventsByDay(filterEventsByMonth(events, year, month))
     
     return (

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useScanMutation } from "@/lib/scanner/scannerApi";
 import { useGetEventsQuery } from "@/lib/eventsApi";
 import { DEFAULT_SCAN_DELAY, DelayCountdown } from "./components/DelayCountdown";
+import { useParams } from "next/navigation";
 
 /**
  * Renders proof of concept QR Scanner to send decrypted value to backend
@@ -15,12 +16,16 @@ import { DEFAULT_SCAN_DELAY, DelayCountdown } from "./components/DelayCountdown"
 export default function EventHostPage() {
     const [lastScannedCodes, setLastScannedCodes] = useState<IDetectedBarcode[]>([]);
     const [clientSideError, setClientSideError] = useState<string | null>(null);
-    const [selectedEventId, setSelectedEventId] = useState<string>('');
-    const { data: events, isFetching: isEventsFetching } = useGetEventsQuery({ today: true });
+    // const [selectedEventId, setSelectedEventId] = useState<string>('');
+    const { data: events, isFetching: isEventsFetching } = useGetEventsQuery();
     const [scanRequest, scanRequestResult] = useScanMutation();
     const [scanDelay, setScanDelay] = useState<number>();
     const [isDelayed, setIsDelayed] = useState(false);
     const [alertAllowed, setAlertAllowed] = useState(false);
+    const params = useParams();
+    const selectedEventId = typeof params.eventId === 'string' ? params.eventId : '';
+
+    const event = events?.find((event) => event.id === selectedEventId)
 
     /**
      * Callback when QRScanner component detects multiple codes
@@ -64,22 +69,18 @@ export default function EventHostPage() {
         )
     }
 
+    if(!event) return (
+        <div className="w-full h-screen flex items-center justify-center">
+            <p className="text-base">Event not found</p>
+        </div>
+    )
+
     return (
         <div className="flex flex-col gap-8 max-w-md w-full">
             <div className="flex flex-col gap-2 w-full">
-                <p>Select an event to scan for:</p>
-                <select defaultValue="default" className="select w-full" onChange={(e) => setSelectedEventId(e.target.value)}>
-                    <option key={'default'} disabled={true} value="default">Not Selected</option>
-                    {events?.map((event) => (
-                        <option key={event.id} value={event.id}>{new Date(event.startDateTime).toLocaleTimeString("en-US", {
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                        }).toLowerCase()} {event.name} - {event.location.name}</option>
-                    ))}
-                </select>
+                <span>You're scanning for</span>
+                <h3 className="text-3xl font-[Dm_Sans] font-bold">{event.name}</h3>
+                <p className="text-sm">Event starts at {new Date(event.startDateTime).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, "day": "numeric", month: "long", year: "numeric" })}</p>
             </div>
 
             {

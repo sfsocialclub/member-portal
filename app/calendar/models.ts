@@ -10,10 +10,22 @@ export type CalendarEvent = {
         address: string;
     };
     scanned: boolean;
+    userIsHost: boolean;
+    hostUserIds: string[];
+    scanCount: number;
+    scans: Scan[]
 };
 
+export interface Scan {
+    id: string;
+    user_id: string;
+    userName: string;
+    event_id: string;
+    scan_time: string;
+}
+
 export interface UserCalendarEvent extends CalendarEvent {
-    status: RsvpStatus
+    status?: RsvpStatus
 }
 
 export enum RsvpStatus {

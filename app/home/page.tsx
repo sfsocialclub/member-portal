@@ -1,8 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { UserQRCode } from "./components/UserQRCode";
-import { WelcomeMessage } from "./components/WelcomeMessage";
+import { UserQRCode } from "../qr/components/UserQRCode";
+import { WelcomeMessage } from "../qr/components/WelcomeMessage";
 import { signOut } from "next-auth/react";
+import { HostedEventsCard } from "./components/HostedEventsCard";
 
 export default function HomePage() {
   const router = useRouter();
@@ -12,9 +13,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full">
+    <div className="flex flex-col justify-center h-full gap-y-12 w-full max-w-md">
       <WelcomeMessage />
-      <UserQRCode />
+      <HostedEventsCard/>
       <button onClick={handleLogoutClick} className="mt-10 btn btn-outline btn-secondary w-full">Log out</button>
     </div>
   );

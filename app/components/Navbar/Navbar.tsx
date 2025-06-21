@@ -39,15 +39,15 @@ export const Navbar = () => {
             <li onClick={handleMenuItemClick}><Link  className={`${pathname === '/home' ? 'font-bold link-primary' : ''}`} href="/home">
               Home
             </Link></li>
+            <li onClick={handleMenuItemClick}><Link className={`${pathname === '/qr' ? 'font-bold link-primary' : ''}`} href="/qr">
+              Member ID
+            </Link></li>
             <li onClick={handleMenuItemClick}><Link className={`${pathname === '/calendar' ? 'font-bold link-primary' : ''}`} href="/calendar">
               Calendar
             </Link></li>
-            <li onClick={handleMenuItemClick}><Link className={`${pathname === '/eventHost' ? 'font-bold link-primary' : ''}`} href="/eventHost">
-              Event Host
-            </Link></li>
-            <li onClick={handleMenuItemClick}><Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
+            {/* <li onClick={handleMenuItemClick}><Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
               Point shop
-            </Link></li>
+            </Link></li> */}
             {
               session.user.isAdmin && (
                 <li onClick={handleMenuItemClick}><Link
@@ -67,15 +67,15 @@ export const Navbar = () => {
           <Link className={`${pathname === '/home' ? 'font-bold link-primary' : ''}`} href="/home">
             Home
           </Link>
+          <Link className={`${pathname === '/qr' ? 'font-bold link-primary' : ''}`} href="/qr">
+            Member ID
+          </Link>
           <Link className={`${pathname === '/calendar' ? 'font-bold link-primary' : ''}`} href="/calendar">
             Calendar
           </Link>
           {/* <Link className={`${pathname === '/point-shop' ? 'font-bold link-primary' : ''}`} href="/point-shop">
             Point shop
           </Link> */}
-          <Link className={`${pathname === '/eventHost' ? 'font-bold link-primary' : ''}`} href="/eventHost">
-            Event Host
-          </Link>
           {
             session.user.isAdmin && (
               <Link

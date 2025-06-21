@@ -28,7 +28,7 @@ export const MonthPicker = () => {
                     <button className="text-xl mr-2 cursor-pointer" onClick={handlePrevMonth}>{'<'}</button>
                     <button className="text-xl cursor-pointer" onClick={handleNextMonth}>{'>'}</button>
                 </div>
-                <p className="text-xs w-full italic">Events you’ve RSVP’d to this month</p>
+                <p className="text-xs w-full italic">All events are shown in local time</p>
             </div>
         </>
     )

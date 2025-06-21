@@ -3,6 +3,8 @@ import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react';
 import type { AxiosError, AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { getSession } from 'next-auth/react';
+import { SFSCSession } from './auth/authOptions';
 
 const BASE_URL = '/flaskApi';
 
@@ -22,9 +24,12 @@ const axiosBaseQuery =
     > =>
         async ({ url, method, data, params, headers }) => {
             try {
-                const tokenRes = await fetch("/authToken")
-                const tokenJson = await tokenRes.json()
-                const token = tokenJson.token
+                // const tokenRes = await fetch("/authToken")
+                // const tokenJson = await tokenRes.json()
+                // const token = tokenJson.token
+
+                const session = await getSession() as SFSCSession; // dynamically fetch session
+                const token = session?.apiToken;
 
                 const result = await axios({
                     url: baseUrl + url,
