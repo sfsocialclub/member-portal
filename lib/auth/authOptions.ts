@@ -32,7 +32,7 @@ export const authOptions: NextAuthOptions = {
                 url: `https://sf-socialclub.slack.com/oauth?client_id=${process.env.SLACK_CLIENT_ID}`,
                 params: {
                     scope: '',
-                    user_scope: "openid,profile,email",
+                    user_scope: "openid,profile,email,users:read",
                     granular_bot_scope: 1,
                     single_channel: 0,
                     install_redirect: '',
@@ -76,7 +76,7 @@ export const authOptions: NextAuthOptions = {
                     }
 
                 } catch (error) {
-                    console.error('Slack API error:', error);
+                    console.error('Slack API error:', JSON.stringify({error},null,2));
                 }
             }
             if (account?.providerAccountId) {
