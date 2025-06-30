@@ -32,7 +32,7 @@ export const authOptions: NextAuthOptions = {
                 url: `https://sf-socialclub.slack.com/oauth?client_id=${process.env.SLACK_CLIENT_ID}`,
                 params: {
                     scope: '',
-                    user_scope: "openid,profile,email,users:read",
+                    user_scope: "users:read",
                     granular_bot_scope: 1,
                     single_channel: 0,
                     install_redirect: '',
@@ -69,7 +69,7 @@ export const authOptions: NextAuthOptions = {
                         user: account.providerAccountId,
                     });
 
-                    console.log(`Slack User Result = ${JSON.stringify({ result })}`)
+                    console.log(`Slack User Result = ${JSON.stringify({ result },null,2)}`)
 
                     if (result.ok && result.user && !Array.isArray(result.user)) {
                         token.isAdmin = result.user.is_admin;
