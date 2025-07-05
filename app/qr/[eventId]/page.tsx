@@ -6,12 +6,14 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { DEFAULT_SCAN_DELAY, DelayCountdown } from "./components/DelayCountdown";
 import { QRScanner } from "./components/QRScanner";
+import { useAppSession } from "@/lib/hooks";
 
 /**
  * Renders QR Scanner to send decrypted value to backend
  * 
  */
 export default function EventHostPage() {
+    const session = useAppSession();
     const [lastScannedCodes, setLastScannedCodes] = useState<IDetectedBarcode[]>([]);
     const [clientSideError, setClientSideError] = useState<string | null>(null);
     const { data: events, isFetching: isEventsFetching } = useGetEventsQuery();
@@ -60,7 +62,9 @@ export default function EventHostPage() {
     const errorMessage = clientSideError || (scanRequestResult?.error as { data?: any })?.data?.error;
     const scanRequestMessage = scanRequestResult.data?.message;
 
+    const isAdmin = session?.user?.isAdmin || false;
     const isHost = event?.userIsHost;
+    const canScan = isAdmin || isHost;
 
     if(isEventsFetching) {
         return (
@@ -74,7 +78,7 @@ export default function EventHostPage() {
         </div>
     )
 
-    if(!isHost) {
+    if(!canScan) {
         return (
             <div className="w-full h-screen flex items-center justify-center">
                 <p className="text-base">Unauthorized</p>
