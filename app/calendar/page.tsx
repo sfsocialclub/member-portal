@@ -10,7 +10,7 @@ import { CalendarLayout, ViewPicker } from "./components/ViewPicker";
 export default function CalendarPage() {
   const { activeLayout } = useAppSelector((state) => state.calendar);
 
-  return <div className="flex items-center h-full flex-col gap-y-4 w-full">
+  return <div className="flex items-center flex-col gap-y-4 w-full">
       <div className="flex flex-col items-center gap-y-4 max-w-lg w-full">
       <ViewPicker activeLayout={activeLayout}/>
         {activeLayout === CalendarLayout.calendar ? (
