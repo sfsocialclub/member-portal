@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { UserCalendarEvent } from "../models";
 import { useAppSession } from "@/lib/hooks";
+import Linkify from 'linkify-react';
 
 type DayOfEventsListProps = {
     day?: Date
@@ -46,7 +47,9 @@ export const EventDetails = ({ event, hideBadges }: Props) => {
                     </div>
                     <div className="text-sm">{timeOfDay} @ {event.location.name}</div> {/**• {`${event.points}pts`}</div> */}
                 </div>
-                <p className="text-xs">{event.description}</p>
+                <Linkify as="p" className="text-xs truncate" options={{attributes: { className: "link link-primary"}}}>
+                    {event.description}
+                </Linkify>
                 { userCanScan && <button className="btn btn-primary btn-sm w-max ml-auto" onClick={() => { router.push(`/qr/${event.id}`) }}>Go to scan</button>}
             </div>
         </div>
