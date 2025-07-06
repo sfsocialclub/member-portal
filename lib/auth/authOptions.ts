@@ -32,7 +32,7 @@ export const authOptions: NextAuthOptions = {
                 url: `https://sf-socialclub.slack.com/oauth?client_id=${process.env.SLACK_CLIENT_ID}`,
                 params: {
                     scope: '',
-                    user_scope: "users:read",
+                    user_scope: "users:read,users:read.email",
                     granular_bot_scope: 1,
                     single_channel: 0,
                     install_redirect: '',
@@ -47,40 +47,60 @@ export const authOptions: NextAuthOptions = {
             jwks_endpoint: "https://slack.com/openid/connect/keys",
             clientId: process.env.SLACK_CLIENT_ID as string,
             clientSecret: process.env.SLACK_CLIENT_SECRET as string,
-            profile(profile, tokens) {
-                console.log(`Profile = ${JSON.stringify({ profile })}`)
-                console.log(`Tokens = ${JSON.stringify({ tokens })}`)
+            async profile(profile, tokens) {
+                console.log('profile args', JSON.stringify({ profile, tokens }, null, 2))
+
+                // Initialize isAdmin
+                let isAdmin = false;
+
+                if (tokens.access_token) {
+                    // Use the access token to make a request to the Slack API
+                    try {
+                        const slackClient = new WebClient(tokens.access_token);
+                        const result = await slackClient.users.info({
+                            user: profile.sub
+                        });
+
+                        console.log(`Slack User Result = ${JSON.stringify({ result }, null, 2)}`)
+
+                        if (result.ok && result.user && !Array.isArray(result.user)) {
+                            isAdmin = result.user.is_admin || false;
+                        }
+
+                        return {
+                            id: profile.sub,
+                            slackId: profile.sub,
+                            name: result.user?.profile?.real_name,
+                            email: result.user?.profile?.email,
+                            image: result.user?.profile?.["image_512"],
+                            isAdmin: isAdmin,
+                            emailVerified: result.user?.is_email_confirmed
+                        }
+                    } catch (error) {
+                        console.error('Slack API error:', JSON.stringify({ error }, null, 2));
+                    }
+                }
+
                 return {
                     id: profile.sub,
-                    slackId: profile["https://slack.com/user_id"],
+                    slackId: profile.sub,
                     name: profile.name,
                     email: profile.email,
                     image: profile.picture,
+                    isAdmin: isAdmin,
+                    emailVerified: null
                 }
             }
         }),
     ],
     callbacks: {
-        async jwt({ token, account }) {
-            if (account?.access_token) {
-                try {
-                    const slackClient = new WebClient(account.access_token);
-                    const result = await slackClient.users.info({
-                        user: account.providerAccountId,
-                    });
-
-                    console.log(`Slack User Result = ${JSON.stringify({ result },null,2)}`)
-
-                    if (result.ok && result.user && !Array.isArray(result.user)) {
-                        token.isAdmin = result.user.is_admin;
-                    }
-
-                } catch (error) {
-                    console.error('Slack API error:', JSON.stringify({error},null,2));
-                }
-            }
+        async jwt({ token, account, user }) {
             if (account?.providerAccountId) {
                 token.slackId = account.providerAccountId;
+            }
+            if(user) {
+                // @ts-expect-error
+                token.isAdmin = user?.isAdmin
             }
 
             console.log(`jwt = ${JSON.stringify({ token }, null, 2)}`)
@@ -98,7 +118,20 @@ export const authOptions: NextAuthOptions = {
             console.log(`Session = ${JSON.stringify({ session }, null, 2)}`)
 
             return { ...session }
-        }
+        },
+    },
+    events: {
+        async signIn({ user, profile }) {
+            // update db user if user exists
+            authOptions.adapter?.updateUser?.({
+                id: user.id,
+                name: profile?.name,
+                email: profile?.email,
+                image: profile?.image,
+                // @ts-expect-error
+                isAdmin: profile?.isAdmin
+            })
+        },
     },
     jwt: {
         // ✅ Custom encode to return plain signed JWT
