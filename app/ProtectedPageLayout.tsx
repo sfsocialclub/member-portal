@@ -1,7 +1,9 @@
+'use client';
 import { usePathname, useRouter } from "next/navigation";
 import { Navbar } from "./components/Navbar/Navbar";
 import { useRouterWithOptimisticPathname } from "./hooks/useOptimisticRouter";
-import { CalendarToday, QrCode } from "@mui/icons-material";
+import CalendarToday from "@mui/icons-material/CalendarToday";
+import QrCode from "@mui/icons-material/QrCode";
 
 export const ProtectedPageLayout = ({
   children,
