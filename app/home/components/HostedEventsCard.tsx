@@ -1,7 +1,7 @@
 import { EventDetails } from "@/app/calendar/components/DayOfEventsList";
 import { CalendarEvent } from "@/app/calendar/models";
 import { useGetEventsQuery } from "@/lib/eventsApi";
-import { CircularProgress } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 
 export const HostedEventsCard = () => {
     const { data, isFetching } = useGetEventsQuery();

@@ -1,5 +1,6 @@
 import toDatetimeLocalString from "@/lib/util/toDatetimeLocalString";
-import { Autocomplete, TextField } from "@mui/material";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 import { useState } from "react";
 
 export type EventFormData = {
