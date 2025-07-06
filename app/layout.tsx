@@ -13,8 +13,8 @@ export default async function RootLayout({
   const session = await getServerSession(authOptions);
 
   return (
-    <html lang="en" data-theme="sfsocialclub" className="font-[Dm_Sans]">
-      <body className="bg-base-200 w-full h-screen">
+    <html lang="en" data-theme="sfsocialclub" className="bg-base-200 font-[Dm_Sans] h-full">
+      <body className="h-full w-full">
           <main className="h-full w-full">
             <Providers session={session}>{children}</Providers>
           </main>

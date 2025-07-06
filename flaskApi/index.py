@@ -339,7 +339,8 @@ def scan():
         # Convert host IDs to strings for comparison
         host_ids = [str(uid) for uid in event.get("hostUserIds", [])]
 
-        if scanner_id not in host_ids:
+        # Throw an error if user is not a host and is not an admin
+        if scanner_id not in host_ids and not request.user['isAdmin']:
             return jsonify({"error": "Unauthorized: not a host of this event"}), 403
 
         # Proceed to insert scan record
