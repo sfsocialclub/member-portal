@@ -13,7 +13,8 @@
           "public/**",
           "flaskApi/venv/**",
           "flaskApi/.venv/**"
-        ]
+        ],
+        "runtime":"python3.12"
       }
     },
     {
