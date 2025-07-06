@@ -75,7 +75,6 @@ start mongo shell
 
 ```
 pip install -r requirements.txt
-pytest
 ```
 
 # Running Google calendar integration

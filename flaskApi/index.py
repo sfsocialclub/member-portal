@@ -13,7 +13,6 @@ from pymongo.errors import DuplicateKeyError
 import traceback
 import json
 from bson import json_util
-import bcrypt
 from pymongo import ReturnDocument
 
 import logging
@@ -26,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 DB = connector()
-CORS(app, support_credentials=True)
+CORS(app)
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax' # For testing locally
 NEXTAUTH_SECRET = os.environ.get("NEXTAUTH_SECRET")
 
