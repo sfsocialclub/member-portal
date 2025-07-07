@@ -1,5 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingExcludes: {
+    '/flaskApi': [
+      "node_modules/**",
+      ".next/**",
+      ".vercel/**",
+      "app/**",
+      "pages/**",
+      "public/**",
+      "flaskApi/venv/**",
+      "flaskApi/.venv/**"
+    ],
+  },
   rewrites: async () => {
     return [
       {
@@ -12,25 +24,38 @@ const nextConfig = {
       },
     ]
   },
-  webpack: (config, { webpack }) => {
-      config.experiments = { ...config.experiments, topLevelAwait: true };
-      config.externals["node:fs"] = "commonjs node:fs";
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-    };
-      config.plugins.push(
+  webpack: (config, { webpack, isServer }) => {
+    // Fix for MUI
+    if (isServer) {
+      config.externals = [
+        ...(config.externals || []),
+        {
+          '@mui/icons-material': 'commonjs @mui/icons-material',
+        },
+      ];
+    }
 
-        new webpack.NormalModuleReplacementPlugin(
-          /^node:/,
-          (resource) => {
-            resource.request = resource.request.replace(/^node:/, '');
-          },
-        ),
-      );
-  
-      return config;
-   }
+    config.experiments = { ...config.experiments, topLevelAwait: true };
+    config.externals["node:fs"] = "commonjs node:fs";
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+    };
+    config.plugins.push(
+
+      new webpack.NormalModuleReplacementPlugin(
+        /^node:/,
+        (resource) => {
+          resource.request = resource.request.replace(/^node:/, '');
+        },
+      ),
+    );
+
+    return config;
+  }
 }
 
-module.exports = nextConfig
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+module.exports = withBundleAnalyzer(nextConfig);

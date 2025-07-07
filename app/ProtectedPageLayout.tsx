@@ -1,7 +1,9 @@
+'use client';
 import { usePathname, useRouter } from "next/navigation";
 import { Navbar } from "./components/Navbar/Navbar";
 import { useRouterWithOptimisticPathname } from "./hooks/useOptimisticRouter";
-import { CalendarToday, QrCode } from "@mui/icons-material";
+import CalendarToday from "@mui/icons-material/CalendarToday";
+import QrCode from "@mui/icons-material/QrCode";
 
 export const ProtectedPageLayout = ({
   children,
@@ -13,7 +15,7 @@ export const ProtectedPageLayout = ({
   const router = useRouter();
   
   return (
-    <div className={`flex flex-col w-full h-full items-center justify-center ${!isPublicRoute && "pt-[64px]"}`}>
+    <div className={`flex flex-col min-h-full w-full items-center justify-center ${!isPublicRoute && "py-[64px]"}`}>
       {!isPublicRoute && <Navbar />}
       <div className="flex flex-col w-full h-full max-w-[1280px] place-items-center p-6">
         {children}

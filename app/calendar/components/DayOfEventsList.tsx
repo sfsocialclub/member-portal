@@ -1,5 +1,7 @@
 import { useRouter } from "next/navigation";
 import { UserCalendarEvent } from "../models";
+import { useAppSession } from "@/lib/hooks";
+import Linkify from 'linkify-react';
 
 type DayOfEventsListProps = {
     day?: Date
@@ -12,9 +14,12 @@ type Props = {
 }
 
 export const EventDetails = ({ event, hideBadges }: Props) => {
+    const session = useAppSession();
     const date = new Date(event.startDateTime);
     const timeOfDay = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).toLowerCase().replace(" ", "");
+    const userIsAdmin = session.user.isAdmin;
     const userIsHost = event.userIsHost;
+    const userCanScan = userIsAdmin || userIsHost;
     const router = useRouter();
 
     const badgeClass = {
@@ -42,8 +47,10 @@ export const EventDetails = ({ event, hideBadges }: Props) => {
                     </div>
                     <div className="text-sm">{timeOfDay} @ {event.location.name}</div> {/**• {`${event.points}pts`}</div> */}
                 </div>
-                <p className="text-xs">{event.description}</p>
-                { userIsHost && <button className="btn btn-primary btn-sm w-max ml-auto" onClick={() => { router.push(`/qr/${event.id}`) }}>Go to scan</button>}
+                <Linkify as="p" className="text-xs truncate" options={{attributes: { className: "link link-primary", target: "_blank"}}}>
+                    {event.description}
+                </Linkify>
+                { userCanScan && <button className="btn btn-primary btn-sm w-max ml-auto" onClick={() => { router.push(`/qr/${event.id}`) }}>Go to scan</button>}
             </div>
         </div>
     )

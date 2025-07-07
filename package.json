@@ -5,7 +5,7 @@
   "scripts": {
     "flask-dev": "python3 -m venv .venv && source .venv/bin/activate && FLASK_DEBUG=1 pip3 install -r flaskApi/requirements.txt && python3 -m flask --app flaskApi/index run -p 5328 --host=0.0.0.0 --cert=certificates/localhost.pem --key=certificates/localhost-key.pem",
     "next-dev": "next dev --experimental-https",
-    "dev": "concurrently \"pnpm run next-dev\" \"pnpm run flask-dev\"",
+    "dev": "concurrently \"yarn run next-dev\" \"yarn run flask-dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -36,6 +36,8 @@
     "eslint-config-next": "13.4.2",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
+    "linkify-react": "^4.3.1",
+    "linkifyjs": "^4.3.1",
     "mongodb": "^6.16.0",
     "next": "15.1.4",
     "next-auth": "^4.24.11",
@@ -49,17 +51,12 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.3.5",
     "@types/js-cookie": "^3.0.6",
-    "daisyui": "5.0.43",
-    "msw": "^2.7.0"
+    "daisyui": "5.0.43"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
     "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
-  },
-  "engines": {
-    "node": ">=22",
-    "pnpm": ">=9"
-  },
-  "packageManager": "pnpm@9.15.2"
+  }
 }
