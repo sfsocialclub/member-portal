@@ -9,6 +9,29 @@ import { useGetSlackUsersQuery } from "@/lib/slack/api";
 import { DeleteDialog } from "./components/DeleteDialog";
 import { CalendarEvent } from "@/app/calendar/models";
 import Link from "next/link";
+import Tooltip from "@mui/material/Tooltip";
+import Box from "@mui/material/Box";
+import styled from "@emotion/styled";
+
+const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
+    '& .sticky-actions': {
+        position: 'sticky',
+        left: 0,
+        zIndex: 1,
+        background: 'white',
+        boxShadow: '2px 0 4px rgba(0, 0, 0, 0.05)',
+    },
+    '& .MuiDataGrid-columnHeaders': {
+        position: 'relative',
+    },
+    '& .MuiDataGrid-columnHeader[data-field="actions"]': {
+        position: 'sticky',
+        left: 0,
+        zIndex: 31,
+        background: 'white',
+        boxShadow: '2px 0 4px rgba(0, 0, 0, 0.05)',
+    },
+}))
 
 
 const AdminEventsPage = () => {
@@ -25,12 +48,32 @@ const AdminEventsPage = () => {
     const [updateEvent] = useUpdateEventMutation();
 
     const cols: GridColDef<CalendarEvent>[] = useMemo(() => ([
+        {
+            field: 'actions',
+            type: 'actions',
+            resizeable: false,
+            sortable: false,
+            filterable: false,
+            cellClassName: 'sticky-actions',
+            getActions: (params: any) => [
+                <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => openEditDialog(params.row)} />,
+                <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={() => openConfirmDelete(params.row)} />,
+            ],
+        },
         { field: 'name', headerName: 'Name', width: 200 },
+        {
+            field: 'scanCount',
+            headerName: '# Scans',
+            renderCell: (params) => <Link className="link text-primary" href={`/admin/events/${params.row.id}`}>{params.value}</Link>,
+            width: 100
+        },
         { field: 'description', headerName: 'Description', width: 200 },
-        { field: 'startDateTime', headerName: 'Start', width: 200,
+        {
+            field: 'startDateTime', headerName: 'Start', width: 200,
             valueFormatter: (value) => new Date(value).toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'short', year: 'numeric' }),
-         },
-        { field: 'endDateTime', headerName: 'End', width: 200,
+        },
+        {
+            field: 'endDateTime', headerName: 'End', width: 200,
             valueFormatter: (value) => value ? new Date(value).toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'short', year: 'numeric' }) : null,
         },
         { field: 'location', headerName: 'Location', width: 200, valueGetter: (value, row) => row.location?.name },
@@ -39,26 +82,62 @@ const AdminEventsPage = () => {
             field: 'hosts',
             headerName: 'Hosts',
             valueGetter: (value, row) => {
-                const hostNames = row.hostUserIds?.map(id => users?.find(u => u.id === id)?.profile?.display_name)
-                return hostNames && `(${hostNames?.length}) ${hostNames?.join(", ")}` 
+                const hostNames = row.hostUserIds?.map(id => users?.find(u => u.id === id)?.profile?.real_name_normalized)
+                return hostNames && `(${hostNames?.length}) ${hostNames?.join(", ")}`
+            },
+            renderCell: (params) => {
+                const value = params.value || ''; // fallback for null/undefined
+                const tooltipText = value.split(',').join('\n');
+
+                return (
+                    <Tooltip
+                        title={<pre style={{ margin: 0 }}>{tooltipText}</pre>}
+                        arrow
+                        placement="top"
+                        slotProps={{
+                            popper: {
+                                modifiers: [
+                                    {
+                                        name: 'preventOverflow',
+                                        options: {
+                                            boundary: 'viewport',
+                                        },
+                                    },
+                                    {
+                                        name: 'offset',
+                                        options: {
+                                            offset: [0, 8],
+                                        },
+                                    },
+                                ],
+                            },
+                            tooltip: {
+                                sx: {
+                                    maxWidth: 300,
+                                    whiteSpace: 'pre-wrap',
+                                    fontFamily: 'monospace',
+                                    textAlign: 'left',
+                                },
+                            },
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: '100%',
+                                overflow: 'hidden',
+                                whiteSpace: 'nowrap',
+                                textOverflow: 'ellipsis',
+                            }}
+                        >
+                            {value}
+                        </Box>
+                    </Tooltip>
+                );
             },
             width: 200,
         },
-        {
-            field: 'scanCount',
-            headerName: '# Scans',
-            renderCell: (params) => <Link className="link text-primary" href={`/admin/events/${params.row.id}`}>{params.value}</Link>,
-            width: 100
-        },
-        {
-            field: 'actions',
-            type: 'actions',
-            getActions: (params: any) => [
-                <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => openEditDialog(params.row)} />,
-                <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={() => openConfirmDelete(params.row)} />,
-            ],
-        },
         
+
     ]), [users]);
 
     const openEditDialog = (event: any) => {
@@ -110,7 +189,15 @@ const AdminEventsPage = () => {
                 Create Event
             </button>
 
-            <DataGrid rows={events} columns={cols} showToolbar loading={isFetching}/>
+            <StyledDataGrid
+                rows={events}
+                //@ts-expect-error - shutup ts
+                columns={cols}
+                showToolbar
+                loading={isFetching}
+                disableVirtualization
+                sx={{ flexGrow: 1}}
+            />
             {createEditModalOpen && <EventModal
                 isOpen={createEditModalOpen}
                 onClose={() => {

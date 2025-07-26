@@ -22,7 +22,7 @@ const Card = ({ title, description, onClick }: CardProps) => {
 export default function AdminPage() {
     const router = useRouter();
 
-    return <div className="flex flex-col items-center h-full w-full max-w-sm md:max-w-xl">
+    return <div className="flex flex-col items-center h-full w-full max-w-sm md:max-w-[2560px]">
         <div className="flex flex-col mb-20 w-full">
             <h1 className="text-xl font-semibold">Admin</h1>
             <p>This is best viewed from a non-mobile device</p>
