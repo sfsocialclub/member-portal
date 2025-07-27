@@ -17,7 +17,7 @@ export const ProtectedPageLayout = ({
   return (
     <div className={`flex flex-col min-h-full w-full items-center justify-center ${!isPublicRoute && "py-[64px]"}`}>
       {!isPublicRoute && <Navbar />}
-      <div className="flex flex-col w-full h-full max-w-[1280px] place-items-center p-6">
+      <div className="flex flex-col w-full h-full max-w-[2560px] place-items-center p-6">
         {children}
       </div>
       {!isPublicRoute && <div className="dock md:hidden">

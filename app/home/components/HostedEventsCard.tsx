@@ -6,7 +6,11 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 export const HostedEventsCard = () => {
     const { data, isFetching } = useGetEventsQuery();
-    const eventsUserIsHosting = data?.filter(event => event.userIsHost) || []
+    const eventsUserIsHosting = data?.filter(event => {
+        const isWithin72HoursAgo = new Date().getTime() - new Date(event.startDateTime).getTime() < 72 * 60 * 60 * 1000;
+        const isWithin2WeeksFromNow = new Date(event.startDateTime).getTime() - new Date().getTime() < 14 * 24 * 60 * 60 * 1000;
+        return isWithin72HoursAgo && isWithin2WeeksFromNow && event.userIsHost
+    }) || []
 
     if(isFetching) {
         return (<CircularProgress sx={{ marginX: "auto"}} />)
