@@ -15,7 +15,7 @@ export const ProtectedPageLayout = ({
   const router = useRouter();
   
   return (
-    <div className={`flex flex-col min-h-full w-full items-center justify-center ${!isPublicRoute && "py-[64px]"}`}>
+    <div className={`flex flex-col min-h-full h-full w-full items-center justify-center ${!isPublicRoute && "py-[64px]"}`}>
       {!isPublicRoute && <Navbar />}
       <div className="flex flex-col w-full h-full max-w-[2560px] place-items-center p-6">
         {children}
