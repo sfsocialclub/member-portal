@@ -121,9 +121,9 @@ export const authOptions: NextAuthOptions = {
         },
     },
     events: {
-        async signIn({ user, profile }) {
+        async signIn({ user, profile, account }) {
             // update db user if user exists
-            authOptions.adapter?.updateUser?.({
+            await authOptions.adapter?.updateUser?.({
                 id: user.id,
                 name: profile?.name,
                 email: profile?.email,
@@ -131,6 +131,23 @@ export const authOptions: NextAuthOptions = {
                 // @ts-expect-error
                 isAdmin: profile?.isAdmin
             })
+
+            if (account?.access_token && account?.id_token) {
+                // update account in db
+                await client.connect()
+                const db = client.db("db") // or your DB name
+                await db.collection("accounts").updateOne({
+                    provider: "slack",
+                    providerAccountId: account?.providerAccountId
+                }, {
+                    $set: {
+                        access_token: account.access_token,
+                        id_token: account.id_token
+                    }
+                })
+            } else {
+                console.log(`Could not find account for user id: ${user.id}`)
+            }
         },
     },
     jwt: {
