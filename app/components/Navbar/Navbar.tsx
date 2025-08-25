@@ -3,6 +3,8 @@ import { useAppSession } from "@/lib/hooks";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar } from "./Avatar";
+import AnnouncementIcon from '@mui/icons-material/Announcement';
+import Tooltip from "@mui/material/Tooltip";
 
 export const Navbar = () => {
   const session = useAppSession();
@@ -88,7 +90,8 @@ export const Navbar = () => {
           }
         </div>
       </div>
-      <div className="flex flex-none gap-x-8 pr-4">
+      <div className="flex flex-none items-center gap-x-6 pr-4">
+        <Tooltip title="Report an issue"><a href="https://docs.google.com/forms/d/e/1FAIpQLSeNd8uf2MWZn_EanmIeZh30uEN16l04tEBwLKgoGh8aenfQrg/viewform?usp=sharing&ouid=112368595577892277287" target="_blank"><AnnouncementIcon className="text-primary opacity-80 scale-x-[-1] hover:cursor-pointer hover:opacity-100" fontSize="small"/></a></Tooltip>
         <Avatar/>
         <div className="btn btn-primary hidden lg:flex">Go to store</div>
       </div>

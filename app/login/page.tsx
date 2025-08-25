@@ -45,6 +45,9 @@ export default function LoginPage() {
             }
           </div>
         </div>
+        <div>
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSeNd8uf2MWZn_EanmIeZh30uEN16l04tEBwLKgoGh8aenfQrg/viewform?usp=sharing&ouid=112368595577892277287" target="_blank" className="mt-4 btn btn-ghost btn-primary w-full text-primary hover:text-white text-sm">Report an issue</a>
+        </div>
       </div>
     </div >
   );
