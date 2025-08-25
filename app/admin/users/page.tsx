@@ -27,8 +27,10 @@ const AdminUsersPage = () => {
     });
     
     return <div className="h-full flex w-full">
-        <div className="flex flex-col max-h-[calc(100%_-_112px)] max-w-full w-full">
-            <DataGrid rows={users} columns={cols} showToolbar loading={isFetching}/>
+        <div className="flex flex-col max-h-[calc(100vh_-_64px-48px-36px)] max-w-full w-full">
+            <DataGrid 
+            className="max-h-[calc(100%_-_64px)]"
+            rows={users} columns={cols} showToolbar loading={isFetching}/>
         </div>
     </div>;
 }

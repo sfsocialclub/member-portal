@@ -19,7 +19,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="h-full w-full flex items-center justify-center">
+    <div className="h-full w-full flex items-center justify-center flex-1">
       <div className="flex flex-col gap-4 w-full max-w-md">
         <Image className={'mx-auto'} src="/logo.png" alt={'SF Social Club'} width={150} height={150} />
         <div className="w-full max-w-2xl bg-base-100 flex flex-col p-6 rounded-2xl">
