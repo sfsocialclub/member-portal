@@ -176,8 +176,8 @@ const AdminEventsPage = () => {
 
 
 
-    return <div className="h-full flex w-full">
-        <div className="flex flex-col max-h-[calc(100%_-_112px)] max-w-full w-full">
+    return <div className="flex-1 h-full flex w-full">
+        <div className="flex flex-col max-w-full w-full max-h-[calc(100vh_-_64px-48px-36px)]">
             <button
                 className="btn btn-primary mb-4 w-fit"
                 onClick={() => {
@@ -190,13 +190,20 @@ const AdminEventsPage = () => {
             </button>
 
             <StyledDataGrid
+                className="max-h-[calc(100%_-_64px)]"
                 rows={events}
                 //@ts-expect-error - shutup ts
                 columns={cols}
                 showToolbar
+                sortModel={[
+                    {
+                        field: 'startDateTime',
+                        sort: 'desc',
+                    },
+                ]}
                 loading={isFetching}
                 disableVirtualization
-                sx={{ flexGrow: 1}}
+                sx={{ flexGrow: 1 }}
             />
             {createEditModalOpen && <EventModal
                 isOpen={createEditModalOpen}

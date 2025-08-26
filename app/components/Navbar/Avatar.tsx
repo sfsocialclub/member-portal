@@ -28,7 +28,7 @@ export const Avatar = () => {
       </div>
       <ul
         tabIndex={0}
-        className="menu menu-sm dropdown-content bg-white rounded-xl z-[1] mt-3 w-52 p-2 shadow"
+        className="menu menu-sm dropdown-content bg-white rounded-xl z-[1] mt-3 w-max p-2 shadow"
       >
         <li>
           <a href="https://docs.google.com/forms/d/1jH_4hPQjxjp8oF7mmOflAqBEMAgFbcis6ZUbXLrC8B4/viewform?edit_requested=true" target="_blank">Submit Feedback</a>
