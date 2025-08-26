@@ -195,9 +195,15 @@ const AdminEventsPage = () => {
                 //@ts-expect-error - shutup ts
                 columns={cols}
                 showToolbar
+                sortModel={[
+                    {
+                        field: 'startDateTime',
+                        sort: 'desc',
+                    },
+                ]}
                 loading={isFetching}
                 disableVirtualization
-                sx={{ flexGrow: 1}}
+                sx={{ flexGrow: 1 }}
             />
             {createEditModalOpen && <EventModal
                 isOpen={createEditModalOpen}
