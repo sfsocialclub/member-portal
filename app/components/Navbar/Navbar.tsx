@@ -26,7 +26,7 @@ const menuItems = [
   },
   {
     label: 'SF Social Club Shop',
-    href:'https://www.sfsocialclub.org/?fbclid=PAZXh0bgNhZW0CMTEAAafO52FJKLKJkbPBnmuBCGdTA0NjFBLQQ6d8QshyW-gNum3z7e5RzoR57N5IGw_aem_maYih4Gih0rqLLpdGNVDcA',
+    href:'https://www.sfsocialclub.org/pages/shop',
     target: '_blank'
   },
   {
@@ -96,12 +96,12 @@ export const Navbar = () => {
         <div className="shrink-0 flex justify-center lg:w-80">
           <Link className="text-xl uppercase font-bold font-[Red_Hat_Display]" href="/home">SF Social Club</Link>
         </div>
-        <div className="gap-x-4 lg:flex hidden">
+        <div className="gap-x-6 lg:flex hidden">
           {
             menuItems.filter((item) => !item.adminOnly || session.user.isAdmin).map((item) => (
               <Link
                 key={item.label}
-                className={`${item.href === pathname ? 'font-bold link-primary' : ''}`}
+                className={`${item.href === pathname ? 'font-bold underline decoration-[.2rem]' : 'opacity-75 hover:opacity-100'} hover:underline text-sm underline-offset-[.3rem]`}
                 href={item.href}
               >
                 {item.label}
@@ -113,7 +113,6 @@ export const Navbar = () => {
       <div className="flex flex-none items-center gap-x-6 pr-4">
         <Tooltip title="Report an issue"><a href="https://docs.google.com/forms/d/e/1FAIpQLSeNd8uf2MWZn_EanmIeZh30uEN16l04tEBwLKgoGh8aenfQrg/viewform?usp=sharing&ouid=112368595577892277287" target="_blank"><AnnouncementIcon className="text-primary opacity-80 scale-x-[-1] hover:cursor-pointer hover:opacity-100" fontSize="small"/></a></Tooltip>
         <Avatar/>
-        <div className="btn btn-primary hidden lg:flex">Go to store</div>
       </div>
     </div>
   )
