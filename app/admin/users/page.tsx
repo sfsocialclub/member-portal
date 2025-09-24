@@ -26,10 +26,10 @@ const AdminUsersPage = () => {
         refetchOnMountOrArgChange: process.env.NODE_ENV !== 'development',
     });
     
-    return <div className="h-full flex w-full">
-        <div className="flex flex-col max-h-[calc(100vh_-_64px-48px-36px)] max-w-full w-full">
-            <DataGrid 
-            className="max-h-[calc(100%_-_64px)]"
+    return <div className="flex-grow flex w-full">
+        <div className="flex flex-col flex-grow max-h-[calc(100vh_-_64px-48px-100px)] max-w-full w-full">
+            <DataGrid
+            className="max-h-[calc(100%)]"
             rows={users} columns={cols} showToolbar loading={isFetching}/>
         </div>
     </div>;

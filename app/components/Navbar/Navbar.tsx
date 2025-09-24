@@ -111,7 +111,7 @@ export const Navbar = () => {
         </div>
       </div>
       <div className="flex flex-none items-center gap-x-6 pr-4">
-        <Tooltip title="Report an issue"><a href="https://docs.google.com/forms/d/e/1FAIpQLSeNd8uf2MWZn_EanmIeZh30uEN16l04tEBwLKgoGh8aenfQrg/viewform?usp=sharing&ouid=112368595577892277287" target="_blank"><AnnouncementIcon className="text-primary opacity-80 scale-x-[-1] hover:cursor-pointer hover:opacity-100" fontSize="small"/></a></Tooltip>
+        <Tooltip title="Report an issue"><a href="https://forms.gle/n69k1yoXyn3sDKKR7" target="_blank"><AnnouncementIcon className="text-primary opacity-80 scale-x-[-1] hover:cursor-pointer hover:opacity-100" fontSize="small"/></a></Tooltip>
         <Avatar/>
       </div>
     </div>
