@@ -13,6 +13,13 @@ export const Avatar = () => {
     signOut().then(() => { router.refresh() })
   };
 
+  const handleMenuItemClick = () =>{
+      const elem: HTMLElement = document.activeElement as HTMLElement;
+      if (elem) {
+        elem?.blur();
+      }
+    };
+
   return (
     <div className="dropdown dropdown-end">
       <div

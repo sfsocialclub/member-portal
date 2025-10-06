@@ -10,14 +10,17 @@ const menuItems = [
   {
     label: 'Home',
     href: '/home',
+    id: 'desktopHomeBtn'
   },
   {
     label: 'Member ID',
     href: '/qr',
+    id: 'desktopQrBtn'
   },
   {
     label: 'Calendar',
     href: '/calendar',
+    id: 'desktopCalendarBtn'
   },
   {
     label: 'Member Drive',
@@ -38,6 +41,10 @@ const menuItems = [
   //   label: 'Point Shop',
   //   href:'/point-shop',
   // },
+  {
+    label: 'Help',
+    href: '/help'
+  },
   {
     label: 'Admin',
     href: '/admin',
@@ -103,6 +110,7 @@ export const Navbar = () => {
                 key={item.label}
                 className={`${item.href === pathname ? 'font-bold underline decoration-[.2rem]' : 'opacity-75 hover:opacity-100'} hover:underline text-sm underline-offset-[.3rem]`}
                 href={item.href}
+                id={item.id}
               >
                 {item.label}
               </Link>

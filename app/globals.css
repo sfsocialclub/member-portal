@@ -75,3 +75,8 @@
 
   }
 }
+
+[data-name="nextstep-wrapper"], [data-name="nextstep-site"] {
+  height: 100%;
+  width: 100%;
+}

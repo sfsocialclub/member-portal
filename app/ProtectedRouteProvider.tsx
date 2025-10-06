@@ -48,6 +48,20 @@ export default function ProtectedRouteProvider({
     checkAuth();
   }, [pathname]);
 
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      registerServiceWorker()
+    }
+  }, [])
+ 
+  async function registerServiceWorker() {
+    const registration = await navigator.serviceWorker.register('/sw.js', {
+      scope: '/',
+      updateViaCache: 'none',
+    })
+  }
+
   // Render the loading component while checking auth on non-login routes
   return loading && !isPublicRoute ? <LoadingPage /> : <>{children}</>;
 }
