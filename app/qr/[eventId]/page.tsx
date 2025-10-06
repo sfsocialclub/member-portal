@@ -90,7 +90,7 @@ export default function EventHostPage() {
         <div className="flex flex-col gap-8 max-w-md w-full">
             <div className="flex flex-col gap-2 w-full">
                 <span>You're scanning for</span>
-                <h3 className="text-3xl font-[Dm_Sans] font-bold">{event.name}</h3>
+                <h3 className="text-3xl font-[Dm_Sans_Variable] font-bold">{event.name}</h3>
                 <p className="text-sm">Event starts at {new Date(event.startDateTime).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, "day": "numeric", month: "long", year: "numeric" })}</p>
             </div>
 

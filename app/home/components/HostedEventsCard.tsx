@@ -17,7 +17,14 @@ export const HostedEventsCard = () => {
     }
 
     if (eventsUserIsHosting.length === 0) {
-        return null;
+        return (
+            <div className="flex flex-col gap-y-4">
+            <h2 className="font-semibold">Events you're hosting</h2>
+            <div className="p-4 bg-white rounded-[20px]">
+                <p className="p-10 font-extrabold text-center text-xl text-primary">No events found</p>
+            </div>
+        </div>
+        );
     }
 
     return (

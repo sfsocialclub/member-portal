@@ -98,7 +98,7 @@ export const authOptions: NextAuthOptions = {
             if (account?.providerAccountId) {
                 token.slackId = account.providerAccountId;
             }
-            if(user) {
+            if (user) {
                 // @ts-expect-error
                 token.isAdmin = user?.isAdmin
             }
