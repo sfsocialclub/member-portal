@@ -133,7 +133,7 @@ def update_event(eventId):
         traceback.print_exc()
         return jsonify({"error":"Failed to update event"}), 500
 
-# Reads
+# Deprecated - unused
 @app.route('/flaskApi/user/<userid>',methods=['GET'])
 @jwt_required
 def user(userid):
@@ -213,9 +213,8 @@ def events():
     try:
         current_user = request.user
         user_slack_id = current_user.get("slackId")
-        user_id = current_user.get("sub")
 
-        scanned_event_docs = DB.code_scans.find({ "user_id": ObjectId(user_id) }, {"_id": 0, "event_id": 1})
+        scanned_event_docs = DB.code_scans.find({ "slack_id": user_slack_id }, {"_id": 0, "event_id": 1})
         scanned_event_ids = {str(doc["event_id"]) for doc in scanned_event_docs}
 
         raw_events = DB.events.find({})
@@ -271,28 +270,42 @@ def event(eventID):
         scans_cursor = DB.code_scans.find({"event_id": ObjectId(eventID)})
         scans_list = list(scans_cursor)
 
-        # Get unique user_ids from scans
-        user_ids = list({scan["user_id"] for scan in scans_list})
-        users_cursor = DB.users.find({"_id": {"$in": user_ids}})
+        # Fetch manual check ins for the event
+        manual_checkins_cursor = DB.event_manual_check_ins.find({"event_id": ObjectId(eventID)})
+        manual_checkins_list = list(manual_checkins_cursor)
+
+        # Get unique user_ids from scans and manual check ins
+        slack_user_ids = list({scan["slack_id"] for scan in scans_list})
+        slack_user_ids.extend(manual_checkin["slack_user_id"] for manual_checkin in manual_checkins_list)
+        slack_user_ids = list(set(slack_user_ids))
+        users_cursor = DB.slack_users.find({"id": {"$in": slack_user_ids}})
         user_map = {
-            str(user["_id"]): user.get("name", "") for user in users_cursor
+            str(user["id"]): user.get("real_name", "") for user in users_cursor
         }
 
         # Attach user names to scans
         modified_scans = []
         for scan in scans_list:
             scan_mod = modify_entity_ids(scan)
-            scan_mod["userName"] = user_map.get(scan_mod["user_id"], "Unknown")
+            scan_mod["userName"] = user_map.get(scan_mod["slack_id"], "Unknown")
+            scanned_by_user = DB.slack_users.find_one({"id": scan_mod["scanned_by"]})
+            if scanned_by_user:
+                scan_mod["scannedByName"] = scanned_by_user.get("real_name", "Unknown")
             modified_scans.append(scan_mod)
 
-        # Fetch manual check ins for the event
-        manual_checkins_cursor = DB.event_manual_check_ins.find({"event_id": ObjectId(eventID)})
-        manual_checkins_list = modify_entity_ids(list(manual_checkins_cursor))
+        modified_checkins = []
+        for checkin in manual_checkins_list:
+            checkin_mod = modify_entity_ids(checkin)
+            checkin_mod["userName"] = user_map.get(checkin_mod["slack_user_id"], "Unknown")
+            created_by_user = DB.slack_users.find_one({"id": checkin_mod["created_by"]})
+            if created_by_user:
+                checkin_mod["createdByName"] = created_by_user.get("real_name", "Unknown")
+            modified_checkins.append(checkin_mod)
 
         # Final event object
         modified_event = modify_entity_ids(event)
         modified_event["scans"] = modified_scans
-        modified_event["manualCheckIns"] = manual_checkins_list
+        modified_event["manualCheckIns"] = modified_checkins
 
         return jsonify(modified_event), 200
     except Exception as e:
@@ -324,16 +337,15 @@ def scan():
     try:
         # Get user making the request from JWT
         scanner_slack_id = request.user["slackId"]
-        scanner_user_id = request.user["sub"]
 
         # Extract data from the request
         data = request.get_json()
-        user_id = data.get("userId")  # the person being scanned
+        slack_id = data.get("slackId")  # the person being scanned
         event_id = data.get("eventId")
         scan_time = datetime.now(timezone.utc)
 
-        if not user_id or not event_id:
-            return jsonify({"error": "Missing userId or eventId"}), 400
+        if not slack_id or not event_id:
+            return jsonify({"error": "Missing slackId or eventId"}), 400
 
         # Fetch the event to check hostUserIds
         event = DB.events.find_one({"_id": ObjectId(event_id)})
@@ -350,9 +362,9 @@ def scan():
         # Proceed to insert scan record
         scan_doc = {
             "event_id": ObjectId(event_id),
-            "user_id": ObjectId(user_id),
+            "slack_id": slack_id,
             "scan_time": scan_time,
-            "scanned_by": ObjectId(scanner_user_id),
+            "scanned_by": scanner_slack_id,
         }
 
         try:
@@ -392,7 +404,6 @@ def manual_checkin(event_id):
     try:
          # Get user making the request from JWT
         requester_slack_id = request.user["slackId"]
-        requester_user_id = request.user["sub"]
 
         # Extract data from the request
         data = request.get_json()
@@ -428,7 +439,7 @@ def manual_checkin(event_id):
                 manual_checkin_doc = {
                     "event_id": ObjectId(event_id),
                     "slack_user_id": slack_user_id,
-                    "created_by": ObjectId(requester_user_id)
+                    "created_by": requester_slack_id
                 }
                 DB.event_manual_check_ins.insert_one(add_timestamps(manual_checkin_doc))
             

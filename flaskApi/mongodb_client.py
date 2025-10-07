@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from pymongo import ASCENDING
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
@@ -33,12 +34,19 @@ def connector():
 
         db = client.db
 
-        # Ensure unique index on event_id + user_id
+        # Enforce uniqueness only once slack_id exists (safe during/after backfill)
         db.code_scans.create_index(
-            [("event_id", 1), ("user_id", 1)], 
-            unique=True
+            [("event_id", ASCENDING), ("slack_id", ASCENDING)],
+            name="event_id_1_slack_id_1_unique_partial",
+            unique=True,
+            partialFilterExpression={"slack_id": {"$exists": True}},
         )
-        print("Index on event_id and user_id created (if not exists).")
+
+        # Helpful for filtering by person
+        db.code_scans.create_index([("slack_id", ASCENDING)], name="slack_id_1")
+
+        # (Optional) also keep an event_id index if you query by it often
+        db.code_scans.create_index([("event_id", ASCENDING)], name="event_id_1")
 
         return db
     except Exception as e:

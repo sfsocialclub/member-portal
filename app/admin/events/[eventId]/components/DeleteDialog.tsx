@@ -1,8 +1,6 @@
-import { useDeleteManualCheckinMutation, useDeleteScanMutation, useGetUsersQuery } from "@/lib/admin/adminApi";
-import { isManualCheckInRow } from "../util";
-import { ManualCheckInRow } from "../util";
-import { ScanRow } from "../util";
+import { useDeleteManualCheckinMutation, useDeleteScanMutation } from "@/lib/admin/adminApi";
 import { useGetSlackUsersQuery } from "@/lib/slack/api";
+import { isManualCheckInRow, ManualCheckInRow, ScanRow } from "../util";
 
 type Props = {
     isOpen: boolean;

@@ -1,13 +1,12 @@
 'use client'
 import { useGetEventAsAdminQuery } from "@/lib/eventsApi";
+import { useGetSlackUsersQuery } from "@/lib/slack/api";
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { DeleteDialog } from "./components/DeleteDialog";
 import { CheckInModal } from "../components/CheckInModal";
-import { useGetUsersQuery } from "@/lib/admin/adminApi";
-import { useGetSlackUsersQuery } from "@/lib/slack/api";
+import { DeleteDialog } from "./components/DeleteDialog";
 import { isManualCheckInRow, ManualCheckInRow, ScanRow } from "./util";
 
 const AdminEventPage = () => {
@@ -16,7 +15,6 @@ const AdminEventPage = () => {
     const [checkInModalOpen, setCheckInModalOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [entityToDelete, setEntityToDelete] = useState<ScanRow | ManualCheckInRow | undefined>(undefined);
-    const { data: users, isFetching: isFetchingUsers } = useGetUsersQuery();
     const { data: slackUsers, isFetching: isFetchingSlackUsers } = useGetSlackUsersQuery();
 
     const columnDefs: GridColDef<ScanRow | ManualCheckInRow>[] = [
@@ -24,13 +22,6 @@ const AdminEventPage = () => {
             field: 'userName',
             headerName: 'Name',
             width: 200,
-            valueGetter: (value, row) => {
-                if(isManualCheckInRow(row)) {
-                    return slackUsers?.find((slackUser) => slackUser.id === row.slack_user_id)?.profile?.real_name;
-                } else {
-                    return value;
-                }
-            }
         },
         {
             field: 'scan_time',
@@ -57,9 +48,9 @@ const AdminEventPage = () => {
             width: 200,
             valueGetter: (_value, row) => {
                 if (isManualCheckInRow(row)) {
-                    return users?.find((user) => user.id === row.created_by)?.name;
+                    return row.createdByName;
                 } else {
-                    return users?.find((user) => user.id === row.scanned_by)?.name;
+                    return row.scannedByName;
                 }
             }
         },
@@ -98,7 +89,7 @@ const AdminEventPage = () => {
             >
                 Add Check-in
             </button>
-            <DataGrid rows={rows} columns={columnDefs} showToolbar loading={isFetchingEvent || isFetchingSlackUsers || isFetchingUsers} />
+            <DataGrid rows={rows} columns={columnDefs} showToolbar loading={isFetchingEvent || isFetchingSlackUsers} />
             {
                 checkInModalOpen && <CheckInModal isOpen={checkInModalOpen} onClose={() => {
                     setCheckInModalOpen(false);

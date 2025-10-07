@@ -28,8 +28,9 @@ export default function AdminPage() {
             <p>This is best viewed from a non-mobile device</p>
         </div>
         <div className="flex flex-col gap-4 w-full justify-center items-center">
-            <Card title="Users" description={`Manage users`} onClick={() => router.push('/admin/users')} />
             <Card title="Events" description={`Manage event details, hosts, and view scans`} onClick={() => router.push('/admin/events')} />
+            <Card title="Members" description={`View members`} onClick={() => router.push('/admin/members')} />
+            <Card title="Members Snapshots" description={`View and run member snapshots`} onClick={() => router.push('/admin/slack')} />
         </div>
     </div>;
 }

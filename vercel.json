@@ -31,5 +31,8 @@
       "src": "/flaskApi/(.*)",
       "dest": "flaskApi/index.py"
     }
+  ],
+  "crons": [
+    { "path": "/cron/slack/users-snapshot", "schedule": "0 4 * * *" }
   ]
 }

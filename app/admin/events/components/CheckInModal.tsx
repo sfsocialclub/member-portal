@@ -1,4 +1,4 @@
-import { useGetUsersQuery, useManualCheckInMutation } from "@/lib/admin/adminApi";
+import { useManualCheckInMutation } from "@/lib/admin/adminApi";
 import { useGetEventAsAdminQuery } from "@/lib/eventsApi";
 import { useGetSlackUsersQuery } from "@/lib/slack/api";
 import Autocomplete from "@mui/material/Autocomplete";
@@ -24,17 +24,15 @@ export const CheckInModal = ({
     onClose,
 }: Props) => {
     const eventId = useParams().eventId as string;
-    const { data: event, isFetching } = useGetEventAsAdminQuery(eventId)
+    const { data: event } = useGetEventAsAdminQuery(eventId)
     const { data: slackUsers } = useGetSlackUsersQuery();
-    const { data: users} = useGetUsersQuery();
     const [formData, setFormData] = useState<CheckInFormData>(initialDataDefault);
     const [submit] = useManualCheckInMutation();
 
     const sortedUsers = useMemo(() => {
-        const scannedUserIds = event?.scans?.map(s => s.user_id) ?? [];
-        const scannedUserSlackIds = users?.filter(u => scannedUserIds.includes(u.id)).map(u => u.slackId) ?? [];
+        const scannedUserIds = event?.scans?.map(s => s.slack_id) ?? [];
         const manualCheckInSlackUserIds = event?.manualCheckIns?.map(mc => mc.slack_user_id) ?? [];
-        const excludedUserIds = [...scannedUserSlackIds, ...manualCheckInSlackUserIds];
+        const excludedUserIds = [...scannedUserIds, ...manualCheckInSlackUserIds];
 
         return (slackUsers ?? [])
             .filter(u => u.id && !excludedUserIds.includes(u.id))
@@ -49,7 +47,7 @@ export const CheckInModal = ({
                 name: u.profile?.real_name,
                 email: u.profile?.email,
             }));
-    }, [slackUsers, users, event?.scans, event?.manualCheckIns]);
+    }, [slackUsers, event?.scans, event?.manualCheckIns]);
 
 
 

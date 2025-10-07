@@ -27,8 +27,6 @@ function groupEventsByDay(events: UserCalendarEvent[]) {
 }
 
 export const ListLayout = () => {
-    const userData = useAppSession();
-    const userId = userData.user.id
     const { data } = eventsApi.useGetEventsQuery();
         const events = (data || []).map(event => ({
             ...event,

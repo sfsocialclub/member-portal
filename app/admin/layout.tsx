@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 const pathMap: Record<string, string> = {
-    '/admin/users': 'Users',
+    '/admin/members': 'Members',
     '/admin/events': 'Events',
+    '/admin/slack': 'Members Snapshot',
 }
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
