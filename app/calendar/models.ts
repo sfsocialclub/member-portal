@@ -12,9 +12,18 @@ export type CalendarEvent = {
     scanned: boolean; // Only visible to non-admins
     userIsHost: boolean; // Only visible to non-admins
     hostUserIds: string[]; // Slack ID of users. Only visible to admins
-    scanCount: number; // Only visible to admins
+    checkInCount: number; // Only visible to admins
     scans: Scan[] // Only visible to admins
+    manualCheckIns: ManualCheckIn[] // Only visible to admins
 };
+
+export interface ManualCheckIn {
+    id: string;
+    created_by: string;
+    slack_user_id: string;
+    event_id: string;
+    created_at: string;
+}
 
 export interface Scan {
     id: string;
@@ -22,6 +31,7 @@ export interface Scan {
     userName: string;
     event_id: string;
     scan_time: string;
+    scanned_by: string;
 }
 
 export interface UserCalendarEvent extends CalendarEvent {

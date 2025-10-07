@@ -62,8 +62,8 @@ const AdminEventsPage = () => {
         },
         { field: 'name', headerName: 'Name', width: 200 },
         {
-            field: 'scanCount',
-            headerName: '# Scans',
+            field: 'checkInCount',
+            headerName: 'Check-ins',
             renderCell: (params) => <Link className="link text-primary" href={`/admin/events/${params.row.id}`}>{params.value}</Link>,
             width: 100
         },

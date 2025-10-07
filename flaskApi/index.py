@@ -68,15 +68,14 @@ def ping():
     print("NEXTAUTH_SECRET: ",NEXTAUTH_SECRET)
     return jsonify(NEXTAUTH_SECRET)
     
-@app.route('/flaskApi/users',methods=['GET'])
+@app.route('/flaskApi/admin/users',methods=['GET'])
 @jwt_required
+@role_required('admin')
 def users():
-    current_role = session.get('role')
-    if current_role and current_role == 'admin':
-        users = DB.users.find({})
-        all_users = modify_entity_ids(users)
-        return jsonify({"data":all_users})
-    return jsonify({"unauthorized":"Only admins and view this data"}), 403
+    users = DB.users.find({})
+
+    all_users = modify_entity_ids(list(users))
+    return jsonify(all_users)
 
 
 @app.route('/flaskApi/event', methods=["POST"])
@@ -196,10 +195,10 @@ def adminEvents():
 
         for event in raw_events:
             event_id = str(event.get("_id"))  # Ensure it's a string for scan lookup
-            scan_count = DB.code_scans.count_documents({"event_id": ObjectId(event_id)})
+            check_in_count = DB.code_scans.count_documents({"event_id": ObjectId(event_id)}) + DB.event_manual_check_ins.count_documents({"event_id": ObjectId(event_id)})
 
             event = modify_entity_ids(event)
-            event["scanCount"] = scan_count
+            event["checkInCount"] = check_in_count
 
             events_list.append(event)
 
@@ -286,9 +285,14 @@ def event(eventID):
             scan_mod["userName"] = user_map.get(scan_mod["user_id"], "Unknown")
             modified_scans.append(scan_mod)
 
+        # Fetch manual check ins for the event
+        manual_checkins_cursor = DB.event_manual_check_ins.find({"event_id": ObjectId(eventID)})
+        manual_checkins_list = modify_entity_ids(list(manual_checkins_cursor))
+
         # Final event object
         modified_event = modify_entity_ids(event)
         modified_event["scans"] = modified_scans
+        modified_event["manualCheckIns"] = manual_checkins_list
 
         return jsonify(modified_event), 200
     except Exception as e:
@@ -319,7 +323,8 @@ def delete_event(eventID):
 def scan():
     try:
         # Get user making the request from JWT
-        scanner_id = request.user["slackId"]
+        scanner_slack_id = request.user["slackId"]
+        scanner_user_id = request.user["sub"]
 
         # Extract data from the request
         data = request.get_json()
@@ -339,14 +344,15 @@ def scan():
         host_ids = [str(uid) for uid in event.get("hostUserIds", [])]
 
         # Throw an error if user is not a host and is not an admin
-        if scanner_id not in host_ids and not request.user['isAdmin']:
+        if scanner_slack_id not in host_ids and not request.user['isAdmin']:
             return jsonify({"error": "Unauthorized: not a host of this event"}), 403
 
         # Proceed to insert scan record
         scan_doc = {
             "event_id": ObjectId(event_id),
             "user_id": ObjectId(user_id),
-            "scan_time": scan_time
+            "scan_time": scan_time,
+            "scanned_by": ObjectId(scanner_user_id),
         }
 
         try:
@@ -378,6 +384,81 @@ def delete_scan(scanId):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": "Failed to delete scan"}), 500
+    
+# Insert manual check-in record
+@app.route('/flaskApi/event/<event_id>/checkIn', methods=['POST'])
+@jwt_required
+def manual_checkin(event_id):
+    try:
+         # Get user making the request from JWT
+        requester_slack_id = request.user["slackId"]
+        requester_user_id = request.user["sub"]
+
+        # Extract data from the request
+        data = request.get_json()
+        slack_user_ids = data.get("slackUserIds") 
+        
+        if not slack_user_ids or len(slack_user_ids) == 0 or not event_id:
+            return jsonify({"error": "Missing userIds or eventId"}), 400
+        
+        # Fetch the event to check hostUserIds
+        event = DB.events.find_one({"_id": ObjectId(event_id)})
+        if not event:
+            return jsonify({"error": "Event not found"}), 404
+
+        # Convert host IDs to strings for comparison
+        host_ids = [str(uid) for uid in event.get("hostUserIds", [])]
+
+        # Throw an error if user is not a host and is not an admin
+        if requester_slack_id not in host_ids and not request.user['isAdmin']:
+            return jsonify({"error": "Unauthorized: not a host of this event"}), 403
+        
+        slack_user_ids_to_add = []
+        for slack_user_id in slack_user_ids:
+            existing_check_in = DB.event_manual_check_ins.find_one({
+                "event_id": ObjectId(event_id),
+                "slack_user_id": slack_user_id
+            })
+            if not existing_check_in:
+                slack_user_ids_to_add.append(slack_user_id)
+
+        try:
+            for slack_user_id in slack_user_ids_to_add:
+                # Proceed to insert manual check-in record
+                manual_checkin_doc = {
+                    "event_id": ObjectId(event_id),
+                    "slack_user_id": slack_user_id,
+                    "created_by": ObjectId(requester_user_id)
+                }
+                DB.event_manual_check_ins.insert_one(add_timestamps(manual_checkin_doc))
+            
+            return jsonify({"message": "Manual check-ins recorded successfully"}), 201
+        except DuplicateKeyError:
+            return jsonify({"error": "User has already checked-in for this event"}), 409
+        except Exception as e:
+            traceback.print_exc()
+            return jsonify({"error": "Unable to create manual check-in record", "details": str(e)}), 500
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": "Unable to create manual check-in record"}), 500
+    
+# Delete the manual check in
+@app.route('/flaskApi/admin/delete-manual-checkin/<document_id>', methods=['DELETE'])
+@jwt_required
+@role_required('admin')
+def delete_manual_checkin(document_id):
+    try:
+        filter = {"_id": ObjectId(document_id)}
+        result = DB.event_manual_check_ins.delete_one(filter)
+        
+        if result.deleted_count > 0:
+            return jsonify({"message": "Check-in deleted successfully"}), 200
+        else:
+            return jsonify({"error": "Check-in not found"}), 404
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": "Failed to delete check-in"}), 500
 
 # Example usage  
 # curl -X POST https://127.0.0.1:5328/rsvp -H "Content-Type: application/json" -d '{"status": "maybe", "user_id": "your_user_id", "event_id": "your_event_id"}' 
