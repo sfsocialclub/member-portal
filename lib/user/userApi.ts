@@ -17,6 +17,7 @@ export type GetUserResponse = {
     dateJoined: string;
 }
 
+// Deprecated, unused
 export const userApi = baseApi
     .injectEndpoints({
     endpoints: (builder) => ({

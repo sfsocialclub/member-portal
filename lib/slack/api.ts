@@ -9,6 +9,10 @@ export const slackApi = createApi({
   endpoints: (builder) => ({
     getSlackUsers: builder.query<SlackUser[], void>({
       query: () => 'users',
+      transformResponse: (response: {
+          users: SlackUser[];
+          lastSnapshotAt: string;
+        }) => response.users,
       keepUnusedDataFor: process.env.NODE_ENV === 'development' ? 300 : 60, // 5min dev, 1min prod
     }),
     getSlackUserInfo: builder.query<any, void>({

@@ -5,7 +5,7 @@ interface ScanResponse {
 }
 
 interface ScanParameters {
-    userId: string;
+    slackId: string;
     eventId: string;
 }
 

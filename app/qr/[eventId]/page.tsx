@@ -30,7 +30,7 @@ export default function EventHostPage() {
      * Callback when QRScanner component detects multiple codes
      * - Resets result
      * - Stores codes in state
-     * - Sends last code in array to backend if it is a JSON object containing 'userId'
+     * - Sends last code in array to backend if it is a JSON object containing 'slackId'
      * 
      * @param detectedCodes - array of objects with raw values, formats, and other metadata
      */
@@ -43,8 +43,8 @@ export default function EventHostPage() {
         if (lastDetectedCode) {
             try {
                 const rawValueAsJson = JSON.parse(lastDetectedCode?.rawValue)
-                if ('userId' in rawValueAsJson) {
-                    scanRequest({ userId: rawValueAsJson.userId, eventId: selectedEventId })
+                if ('slackId' in rawValueAsJson) {
+                    scanRequest({ slackId: rawValueAsJson.slackId, eventId: selectedEventId })
                 } else {
                     throw new SyntaxError('Code unrecognized')
                 }

@@ -23,15 +23,18 @@ export interface ManualCheckIn {
     slack_user_id: string;
     event_id: string;
     created_at: string;
+    createdByName: string;
+    userName: string;
 }
 
 export interface Scan {
     id: string;
-    user_id: string;
+    slack_id: string;
     userName: string;
     event_id: string;
     scan_time: string;
     scanned_by: string;
+    scannedByName: string;
 }
 
 export interface UserCalendarEvent extends CalendarEvent {

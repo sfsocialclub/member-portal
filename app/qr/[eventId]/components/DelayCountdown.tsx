@@ -5,7 +5,7 @@ export const DEFAULT_SCAN_DELAY = 3500;
 
 export const DelayCountdown = ({ countdown, setCountdown, isDelayed, setIsDelayed }: { countdown?: number, setCountdown: React.Dispatch<React.SetStateAction<number | undefined>>, isDelayed: boolean, setIsDelayed: React.Dispatch<React.SetStateAction<boolean>> }) => {
     useEffect(() => {
-        let intervalId: NodeJS.Timer;
+        let intervalId: NodeJS.Timeout | undefined;
 
         if (isDelayed) {
             intervalId = setInterval(() => {
@@ -34,7 +34,7 @@ export const DelayCountdown = ({ countdown, setCountdown, isDelayed, setIsDelaye
         <div className={`flex gap-x-4 items-center ${countdown ? "" : "opacity-0"} transition-opacity`}>
             <p>Next scan in: </p>
             <div className="radial-progress"
-                style={{"--size":"2rem", "--value": Math.floor((countdownSeconds / DEFAULT_SCAN_DELAY) * 100) } as React.CSSProperties}
+                style={{ "--size": "2rem", "--value": Math.floor((countdownSeconds / DEFAULT_SCAN_DELAY) * 100) } as React.CSSProperties}
                 aria-valuenow={Math.floor((countdownSeconds / DEFAULT_SCAN_DELAY) * 100)}
                 role="progressbar">
                 <span className="text-[.7rem]">{Math.floor(countdownSeconds / 1000)}.{Math.floor((countdownSeconds / 1000 % 1) * 10)}s</span>
