@@ -3,8 +3,7 @@ Get [Python](https://www.python.org/downloads/) and [Node](https://nodejs.org/en
 
 ## Install packages
 ```bash
-npm install -g pnpm
-pnpm install
+yarn
 ```
 
 ## Environment Variables
@@ -13,7 +12,7 @@ Make a copy of the local.env file in root to .env and fill the variables.
 # Start
 Run this in a terminal:
 ```bash
-pnpm run dev
+yarn dev
 ```
 
 Open [https://localhost:3000](https://localhost:3000) with your browser to see the result.

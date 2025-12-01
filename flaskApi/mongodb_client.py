@@ -18,6 +18,7 @@ client = MongoClient()
 USERNAME = os.environ.get("MONGO_USERNAME")
 PASSWORD = os.environ.get("MONGO_PASSWORD")
 URI = f"mongodb+srv://{USERNAME}:{PASSWORD}@cluster1.nfvpz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1"
+DB_NAME = os.environ.get("MONGODB_DB")
 
 print(USERNAME, PASSWORD)
 
@@ -32,7 +33,7 @@ def connector():
         client.admin.command('ping')
         print("Pinged your deployment. You successfully connected to MongoDB!")
 
-        db = client.db
+        db = client[DB_NAME]
 
         # Enforce uniqueness only once slack_id exists (safe during/after backfill)
         db.code_scans.create_index(
@@ -53,7 +54,3 @@ def connector():
         print(e)
         return None
     
-def test_collection():
-    database = connector()
-    print(database.list_collection_names())
-    print(database.users.find_one({"name":"Sean Brown"}))
