@@ -365,6 +365,15 @@ def scan():
         # Throw an error if user is not a host and is not an admin
         if scanner_slack_id not in host_ids and not request.user['isAdmin']:
             return jsonify({"error": "Unauthorized: not a host of this event"}), 403
+        
+        existing_check_in = DB.event_manual_check_ins.find_one({
+            "event_id": ObjectId(event_id),
+            "slack_user_id": slack_id
+        })
+
+        # Throw an error if user has already checked in
+        if existing_check_in:
+            return jsonify({"error": "User has already checked in for this event"}), 409
 
         # Proceed to insert scan record
         scan_doc = {
