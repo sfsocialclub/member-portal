@@ -120,6 +120,7 @@ def update_event(eventId):
             # "event_date":event_info.get("event_date"),
             "startDateTime":event_info.get("startDateTime", None),
             "endDateTime":event_info.get("endDateTime", None),
+            "isPrivate":event_info.get("isPrivate"),
         }
 
         result = DB.events.update_one(
@@ -213,6 +214,7 @@ def events():
     try:
         current_user = request.user
         user_slack_id = current_user.get("slackId")
+        is_admin = current_user.get("isAdmin")
 
         scanned_event_docs = DB.code_scans.find({ "slack_id": user_slack_id }, {"_id": 0, "event_id": 1})
         scanned_event_ids = {str(doc["event_id"]) for doc in scanned_event_docs}
@@ -223,14 +225,19 @@ def events():
         for event in raw_events:
             event_id = str(event.get("_id"))
             event = modify_entity_ids(event)
+
+            is_private = event.get("isPrivate")
+            is_host = user_slack_id in event.get("hostUserIds", [])
             
-            event["userIsHost"] = user_slack_id in event.get("hostUserIds", [])
+            event["userIsHost"] = is_host
             event["scanned"] = event_id in scanned_event_ids
 
             # Hide hostUserIds for non-admins
             event.pop("hostUserIds", None)
-
-            events_list.append(event)
+            
+            # Hide private events for non-admins and non-hosts
+            if not is_private or is_admin or is_host:
+                events_list.append(event)
             
         return jsonify(events_list), 200
     except Exception as e:
