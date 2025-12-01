@@ -31,7 +31,7 @@ export async function runSlackUsersSnapshot({ limit = 200, softDeadlineMs = 52_0
     const started = Date.now();
     const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
     const mongo = await client.connect();
-    const db = mongo.db("db");
+    const db = mongo.db(process.env.MONGODB_DB);
     const col = db.collection("slack_users");
 
     await col.createIndex({ id: 1 }, { unique: true });

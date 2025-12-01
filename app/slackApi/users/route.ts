@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   }
 
   const mongo = await client.connect();
-  const db = mongo.db("db");
+  const db = mongo.db(process.env.MONGODB_DB);
   const col = db.collection("slack_users");
 
   const users = await col.find({

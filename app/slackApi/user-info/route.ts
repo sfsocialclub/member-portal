@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   }
 
   await client.connect()
-  const db = client.db("db") // or your DB name
+  const db = client.db(process.env.MONGODB_DB) // or your DB name
   const account = await db.collection("accounts").findOne({
     provider: "slack",
     providerAccountId: session?.user?.slackId,

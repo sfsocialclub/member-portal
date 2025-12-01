@@ -13,7 +13,7 @@ const ACTIVE_FILTER = {
 
 async function getStats() {
   const mongo = await client.connect();
-  const db = mongo.db("db");
+  const db = mongo.db(process.env.MONGODB_DB);
   const col = db.collection("slack_users");
 
   const [totalDocs, activeHumans, lastDoc] = await Promise.all([
