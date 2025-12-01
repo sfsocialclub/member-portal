@@ -120,6 +120,7 @@ def update_event(eventId):
             # "event_date":event_info.get("event_date"),
             "startDateTime":event_info.get("startDateTime", None),
             "endDateTime":event_info.get("endDateTime", None),
+            "isPrivate":event_info.get("isPrivate"),
         }
 
         result = DB.events.update_one(
@@ -213,6 +214,7 @@ def events():
     try:
         current_user = request.user
         user_slack_id = current_user.get("slackId")
+        is_admin = current_user.get("isAdmin")
 
         scanned_event_docs = DB.code_scans.find({ "slack_id": user_slack_id }, {"_id": 0, "event_id": 1})
         scanned_event_ids = {str(doc["event_id"]) for doc in scanned_event_docs}
@@ -223,14 +225,19 @@ def events():
         for event in raw_events:
             event_id = str(event.get("_id"))
             event = modify_entity_ids(event)
+
+            is_private = event.get("isPrivate")
+            is_host = user_slack_id in event.get("hostUserIds", [])
             
-            event["userIsHost"] = user_slack_id in event.get("hostUserIds", [])
+            event["userIsHost"] = is_host
             event["scanned"] = event_id in scanned_event_ids
 
             # Hide hostUserIds for non-admins
             event.pop("hostUserIds", None)
-
-            events_list.append(event)
+            
+            # Hide private events for non-admins and non-hosts
+            if not is_private or is_admin or is_host:
+                events_list.append(event)
             
         return jsonify(events_list), 200
     except Exception as e:
@@ -358,6 +365,15 @@ def scan():
         # Throw an error if user is not a host and is not an admin
         if scanner_slack_id not in host_ids and not request.user['isAdmin']:
             return jsonify({"error": "Unauthorized: not a host of this event"}), 403
+        
+        existing_check_in = DB.event_manual_check_ins.find_one({
+            "event_id": ObjectId(event_id),
+            "slack_user_id": slack_id
+        })
+
+        # Throw an error if user has already checked in
+        if existing_check_in:
+            return jsonify({"error": "User has already checked in for this event"}), 409
 
         # Proceed to insert scan record
         scan_doc = {

@@ -23,7 +23,7 @@ export type Token = {
 
 export const authOptions: NextAuthOptions = {
     adapter: MongoDBAdapter(client, {
-        databaseName: 'db'
+        databaseName: process.env.MONGODB_DB
     }),
     providers: [
         SlackProvider({
@@ -135,7 +135,7 @@ export const authOptions: NextAuthOptions = {
             if (account?.access_token && account?.id_token) {
                 // update account in db
                 await client.connect()
-                const db = client.db("db") // or your DB name
+                const db = client.db(process.env.MONGODB_DB) // or your DB name
                 await db.collection("accounts").updateOne({
                     provider: "slack",
                     providerAccountId: account?.providerAccountId

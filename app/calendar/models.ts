@@ -15,6 +15,7 @@ export type CalendarEvent = {
     checkInCount: number; // Only visible to admins
     scans: Scan[] // Only visible to admins
     manualCheckIns: ManualCheckIn[] // Only visible to admins
+    isPrivate: boolean;
 };
 
 export interface ManualCheckIn {

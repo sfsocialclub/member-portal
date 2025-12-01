@@ -1,7 +1,11 @@
 'use client';
 import toDatetimeLocalString from "@/lib/util/toDatetimeLocalString";
 import Autocomplete from "@mui/material/Autocomplete";
+import Checkbox from "@mui/material/Checkbox";
+import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
 
 export type EventFormData = {
@@ -14,6 +18,7 @@ export type EventFormData = {
         address: string;
     };
     hostUserIds: string[];
+    isPrivate: boolean;
 };
 
 type User = {
@@ -37,6 +42,7 @@ const initialDataDefault: EventFormData = {
     endDateTime: "",
     location: { name: "", address: "" },
     hostUserIds: [],
+    isPrivate: false
 }
 
 export const EventModal = ({
@@ -69,6 +75,11 @@ export const EventModal = ({
                     ...prev.location,
                     [locField]: value,
                 },
+            }));
+        } else if (name === "isPrivate") {
+            setFormData((prev) => ({
+                ...prev,
+                isPrivate: (e.target as HTMLInputElement).checked,
             }));
         } else {
             setFormData((prev) => ({
@@ -174,6 +185,22 @@ export const EventModal = ({
                                 />
                             )}
                         />
+                        <FormControl
+                            fullWidth
+                            variant="outlined"
+                        >
+                            <FormControlLabel
+                                id="isPrivate-label"
+                                control={<Checkbox
+                                    id="isPrivate"
+                                    name="isPrivate"
+                                    checked={formData.isPrivate}
+                                    onChange={handleChange}
+                                />}
+                                label={<><Typography id="isPrivate-label">Private</Typography><Typography variant="body2">Only event hosts or admins can see this event</Typography></>}
+                            />
+
+                        </FormControl>
 
 
 

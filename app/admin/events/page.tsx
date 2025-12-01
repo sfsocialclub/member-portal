@@ -68,6 +68,7 @@ const AdminEventsPage = () => {
             width: 100
         },
         { field: 'description', headerName: 'Description', width: 200 },
+        { field: 'isPrivate', headerName: 'Private', width: 100, valueGetter: (value, row) => row.isPrivate ? 'Yes' : 'No' },
         {
             field: 'startDateTime', headerName: 'Start', width: 200,
             valueFormatter: (value) => new Date(value).toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'short', year: 'numeric' }),

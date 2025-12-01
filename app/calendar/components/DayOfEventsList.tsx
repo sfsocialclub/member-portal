@@ -37,20 +37,25 @@ export const EventDetails = ({ event, hideBadges }: Props) => {
                         {!hideBadges && (
                             <>
                                 {(event.scanned || event.status) && (
-                                <div className={`capitalize text-xs badge px-2 rounded-xl min-w-4 ${event.scanned ? "badge-outline badge-success" : event.status ? `${badgeClass[event.status]}` : ''}`}>{event.scanned ? "Attended" : event.status}</div>
+                                    <div className={`capitalize text-xs badge px-2 rounded-xl min-w-4 ${event.scanned ? "badge-outline badge-success" : event.status ? `${badgeClass[event.status]}` : ''}`}>{event.scanned ? "Attended" : event.status}</div>
                                 )}
                                 {event.userIsHost && (
-                                <div className="capitalize text-xs badge px-2 rounded-xl min-w-4 badge-outline badge-primary">Host</div>
+                                    <div className="capitalize text-xs badge px-2 rounded-xl min-w-4 badge-outline badge-primary">Host</div>
                                 )}
                             </>
                         )}
+                        {
+                            event.isPrivate && (
+                                <div className="capitalize text-xs badge px-2 rounded-xl min-w-4 badge-outline badge-error">Private</div>
+                            )
+                        }
                     </div>
                     <div className="text-sm">{timeOfDay} @ {event.location.name}</div> {/**• {`${event.points}pts`}</div> */}
                 </div>
-                <Linkify as="p" className="text-xs truncate" options={{attributes: { className: "link link-primary", target: "_blank"}}}>
+                <Linkify as="p" className="text-xs truncate" options={{ attributes: { className: "link link-primary", target: "_blank" } }}>
                     {event.description}
                 </Linkify>
-                { userCanScan && <button className="btn btn-primary btn-sm w-max ml-auto" onClick={() => { router.push(`/qr/${event.id}`) }}>Go to scan</button>}
+                {userCanScan && <button className="btn btn-primary btn-sm w-max ml-auto" onClick={() => { router.push(`/qr/${event.id}`) }}>Go to scan</button>}
             </div>
         </div>
     )

@@ -37,6 +37,65 @@
   --noise: 0;
 }
 
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  /* Prevent system-level overscroll/bounce from stealing the gesture */
+  overscroll-behavior-y: contain;
+}
+
+.ptr-container {
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+  position: relative;
+}
+
+.ptr-container {
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.ptr-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-70px);
+  transition: transform 0.2s ease, opacity 0.15s ease;
+  opacity: 0;
+  z-index: 10;
+}
+
+/* Only show indicator while actively pulling */
+.ptr-container.ptr-active .ptr-indicator {
+  opacity: 1;
+}
+
+.ptr-icon {
+  color: #999; /* or inherit / use your theme */
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.ptr-icon-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ptr-content {
+  min-height: 100vh;
+}
+
 
 .rdp-month_caption {
   display: none
