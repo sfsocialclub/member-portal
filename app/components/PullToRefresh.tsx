@@ -169,7 +169,7 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
                 </svg>
                 <RefreshIcon className={progress > 0 ? "ptr-icon ptr-icon-visible" : "ptr-icon"} sx={{ height: 16, width: 16, position: 'absolute' }} />
             </div>
-            <div className="ptr-content">{children}</div>
+            <div className="ptr-content h-full">{children}</div>
         </div>
     );
 }

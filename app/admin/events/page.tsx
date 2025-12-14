@@ -204,7 +204,7 @@ const AdminEventsPage = () => {
                 ]}
                 loading={isFetching}
                 disableVirtualization
-                sx={{ flexGrow: 1 }}
+                sx={{ flexGrow: 1, minHeight: 'calc(100vh - 64px - 48px - 100px - 40px - 16px)'}}
             />
             {createEditModalOpen && <EventModal
                 isOpen={createEditModalOpen}
