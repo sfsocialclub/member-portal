@@ -39,7 +39,7 @@
     "linkifyjs": "^4.3.1",
     "mongodb": "^6.16.0",
     "motion": "^12.23.22",
-    "next": "15.1.4",
+    "next": "15.1.11",
     "next-auth": "^4.24.11",
     "nextstepjs": "^2.1.2",
     "postcss": "8.4.23",
