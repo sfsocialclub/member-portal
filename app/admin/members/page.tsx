@@ -30,7 +30,9 @@ const AdminUsersPage = () => {
         <div className="flex flex-col flex-grow max-h-[calc(100vh_-_64px-48px-100px)] max-w-full w-full">
             <DataGrid
             className="max-h-[calc(100%)]"
-            rows={users} columns={cols} showToolbar loading={isFetching}/>
+            rows={users} columns={cols} showToolbar loading={isFetching}
+            sx={{flexGrow: 1, minHeight: 'calc(100vh - 64px - 48px - 100px)'}}
+            />
         </div>
     </div>;
 }
