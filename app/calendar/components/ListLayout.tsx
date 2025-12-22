@@ -3,6 +3,7 @@ import { useAppSelector, useAppSession } from "@/lib/hooks";
 import { UserCalendarEvent } from "../models";
 import { DayOfEventsList } from "./DayOfEventsList";
 import { MonthPicker } from "./MonthPicker";
+import { formatDateToLocaleStringLA } from "@/lib/util/dateFormatters";
 
 function filterEventsByMonth(events: UserCalendarEvent[], year: number, month: number) {
     return events.filter(event => {
@@ -30,7 +31,7 @@ export const ListLayout = () => {
     const { data } = eventsApi.useGetEventsQuery();
         const events = (data || []).map(event => ({
             ...event,
-            startDateTime: new Date(event.startDateTime).toLocaleString("en-US")
+            startDateTime: formatDateToLocaleStringLA(event.startDateTime)
           }));
     const { year, month } = useAppSelector((state) => state.calendar);
 

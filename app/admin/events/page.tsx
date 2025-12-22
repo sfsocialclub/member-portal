@@ -12,6 +12,7 @@ import Link from "next/link";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import styled from "@emotion/styled";
+import { formatDateTimeForTable } from "@/lib/util/dateFormatters";
 
 const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
     '& .sticky-actions': {
@@ -71,11 +72,11 @@ const AdminEventsPage = () => {
         { field: 'isPrivate', headerName: 'Private', width: 100, valueGetter: (value, row) => row.isPrivate ? 'Yes' : 'No' },
         {
             field: 'startDateTime', headerName: 'Start', width: 200,
-            valueFormatter: (value) => new Date(value).toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'short', year: 'numeric' }),
+            valueFormatter: (value) => formatDateTimeForTable(value),
         },
         {
             field: 'endDateTime', headerName: 'End', width: 200,
-            valueFormatter: (value) => value ? new Date(value).toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'short', year: 'numeric' }) : null,
+            valueFormatter: (value) => value ? formatDateTimeForTable(value) : null,
         },
         { field: 'location', headerName: 'Location', width: 200, valueGetter: (value, row) => row.location?.name },
         { field: 'location.address', headerName: 'Address', width: 200, valueGetter: (value, row) => row.location?.address },

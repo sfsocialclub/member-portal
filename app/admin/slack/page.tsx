@@ -32,7 +32,7 @@ async function getStats() {
 export default async function AdminSlackPage() {
 
   const stats = await getStats();
-  const last = stats.lastSnapshotAt ? new Date(stats.lastSnapshotAt).toLocaleString() : "—";
+  const last = stats.lastSnapshotAt ? formatDateToLocaleStringLA(stats.lastSnapshotAt) : "—";
 
   return (
     <div className="p-6 space-y-6 max-w-3xl">

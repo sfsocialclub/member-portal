@@ -1,4 +1,5 @@
 "use client";
+import { formatDateToLocaleStringLA } from "@/lib/util/dateFormatters";
 import { useState } from "react";
 
 export default function RunNowButton() {
@@ -32,7 +33,7 @@ export default function RunNowButton() {
                 <div className={`rounded-2xl border p-4 ${result.ok ? "bg-green-50" : "bg-red-50"}`}>
                     <div className="font-medium">{result.ok ? "Snapshot complete" : "Snapshot failed"}</div>
                     <div className="text-sm">Fetched: {result.totalFetched} • Upserts: {result.totalUpserts}</div>
-                    <div className="text-xs text-gray-600">{new Date(result.when).toLocaleString()}</div>
+                    <div className="text-xs text-gray-600">{formatDateToLocaleStringLA(result.when)}</div>
                     {result.error && <div className="text-xs text-red-700 mt-1">{result.error}</div>}
                 </div>
             )}
