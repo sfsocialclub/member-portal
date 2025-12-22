@@ -1,5 +1,6 @@
 import { eventsApi } from "@/lib/eventsApi";
 import { useAppSelector, useAppSession } from "@/lib/hooks";
+import { formatDateToLocaleStringLA } from "@/lib/util/dateFormatters";
 import { DayPicker, Modifiers, MonthChangeEventHandler } from "react-day-picker";
 
 export type CalendarProps = {
@@ -12,7 +13,7 @@ export const Calendar = ({ onDayClick, onMonthChange }: CalendarProps) => {
     const { data } = eventsApi.useGetEventsQuery();
     const events = (data || []).map(event => ({
         ...event,
-        startDateTime: new Date(event.startDateTime).toLocaleString("en-US")
+        startDateTime: formatDateToLocaleStringLA(event.startDateTime)
       }));
     // TODO: Get all Events
 

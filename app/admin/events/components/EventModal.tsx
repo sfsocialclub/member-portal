@@ -1,5 +1,5 @@
 'use client';
-import toDatetimeLocalString from "@/lib/util/toDatetimeLocalString";
+import { formatDateTimeForForm } from "@/lib/util/dateFormatters";
 import Autocomplete from "@mui/material/Autocomplete";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
@@ -129,7 +129,7 @@ export const EventModal = ({
                                 name="startDateTime"
                                 type="datetime-local"
                                 fullWidth
-                                value={formData.startDateTime ? toDatetimeLocalString(formData.startDateTime) : ""}
+                                value={formData.startDateTime ? formatDateTimeForForm(formData.startDateTime) : ""}
                                 onChange={handleChange}
                                 InputLabelProps={{ shrink: true }}
                             />
@@ -138,7 +138,7 @@ export const EventModal = ({
                                 name="endDateTime"
                                 type="datetime-local"
                                 fullWidth
-                                value={formData.endDateTime ? toDatetimeLocalString(formData.endDateTime) : ""}
+                                value={formData.endDateTime ? formatDateTimeForForm(formData.endDateTime) : ""}
                                 onChange={handleChange}
                                 InputLabelProps={{ shrink: true }}
                             />

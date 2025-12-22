@@ -4,6 +4,7 @@ import { setMonth, setSelectedDate, setYear } from "../calendarSlice";
 import { Calendar, CalendarProps } from "./Calendar";
 import { DayOfEventsList } from "./DayOfEventsList";
 import { MonthPicker } from "./MonthPicker";
+import { formatDateToLocaleStringLA } from "@/lib/util/dateFormatters";
 
 function isWithin24Hours(midnightDate: Date, arbitraryDate: Date) {
     // Ensure both inputs are Date objects
@@ -28,7 +29,7 @@ export const CalendarLayout = () => {
     const { data } = eventsApi.useGetEventsQuery();
     const events = (data || []).map(event => ({
         ...event,
-        startDateTime: new Date(event.startDateTime).toLocaleString("en-US")
+        startDateTime: formatDateToLocaleStringLA(event.startDateTime)
       }));
 
     const { selectedDate } = useAppSelector((state) => state.calendar);

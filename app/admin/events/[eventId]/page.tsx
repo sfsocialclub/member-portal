@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { CheckInModal } from "../components/CheckInModal";
 import { DeleteDialog } from "./components/DeleteDialog";
 import { isManualCheckInRow, ManualCheckInRow, ScanRow } from "./util";
+import { formatDateTimeForTable } from "@/lib/util/dateFormatters";
 
 const AdminEventPage = () => {
     const eventId = useParams().eventId as string;
@@ -29,12 +30,12 @@ const AdminEventPage = () => {
             width: 200,
             valueGetter: (value, row) => {
                 if (isManualCheckInRow(row)) {
-                    return new Date(row.created_at).toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'short', year: 'numeric' });
+                    return formatDateTimeForTable(row.created_at);
                 } else {
-                    return new Date(value).toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'short', year: 'numeric' });
+                    return formatDateTimeForTable(value);
                 }
             },
-            valueFormatter: (value) => new Date(value).toLocaleString('en-US', { hour12: true, hour: 'numeric', minute: 'numeric', day: 'numeric', month: 'short', year: 'numeric' }),
+            valueFormatter: (value) => formatDateTimeForTable(value),
         },
         {
             field: 'type',
